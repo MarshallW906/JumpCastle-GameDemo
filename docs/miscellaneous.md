@@ -43,3 +43,5 @@ We offer babaylon.js' core and its modules as npm packages. The following are av
 - [babylonjs-serializers](https://www.npmjs.com/package/babylonjs-serializers) - Scene / mesh serializers.
 - [babylonjs-gui](https://www.npmjs.com/package/babylonjs-gui) - BabylonJS GUI module.
 - [babylonjs-viewer](https://www.npmjs.com/package/babylonjs-viewer) - The stand-alone BabylonJS Viewer.
+
+babylonjs-materials babylonjs-loaders babylonjs-post-process babylonjs-procedural-textures babylonjs-serializers babylonjs-gui babylonjs-viewer
