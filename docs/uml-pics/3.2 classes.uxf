@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>400</x>
+      <y>50</y>
+      <w>210</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>Monster
+--
+id
+type: MonsterType
+name: string
+hp: int
+gold: int
+attack_damage: int
+move_speed: double
+items: dict
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>70</x>
+      <y>60</y>
+      <w>210</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>Player
+--
+id
+name: string
+hp: int
+gold: int
+soul: int
+attack_damage: int
+move_speed: double
+shield_energy: int
+shield_recovery: int
+items: dict
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>310</y>
+      <w>210</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>Item
+--
+id
+type: ItemType
+name: string
+quantity: int</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>400</x>
+      <y>300</y>
+      <w>220</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>MapBlock
+--
+id
+type: BlockType
+name: string
+is_trap: boolean
+is_modifier: boolean
+trap_damage_per_sec: int
+modifier: dict{property:value}</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
