@@ -1,0 +1,42 @@
+{
+  "name": "ts-game-webpack",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --watch",
+    "start": "webpack-dev-server --open",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/lodash": "^4.14.123",
+    "@types/node": "^11.13.4",
+    "clean-webpack-plugin": "^2.0.1",
+    "css-loader": "^2.1.1",
+    "csv-loader": "^3.0.2",
+    "file-loader": "^3.0.1",
+    "html-webpack-plugin": "^3.2.0",
+    "papaparse": "^4.6.3",
+    "style-loader": "^0.23.1",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.4.3",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0",
+    "webpack-dev-server": "^3.2.1",
+    "xml-loader": "^1.2.1"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^4.0.0-alpha.18",
+    "@babylonjs/gui": "^4.0.0-alpha.18",
+    "@babylonjs/inspector": "^4.0.0-alpha.18",
+    "@babylonjs/loaders": "^4.0.0-alpha.18",
+    "@babylonjs/materials": "^4.0.0-alpha.18",
+    "@babylonjs/post-processes": "^4.0.0-alpha.18",
+    "@babylonjs/procedural-textures": "^4.0.0-alpha.18",
+    "@babylonjs/serializers": "^4.0.0-alpha.18"
+  }
+}
