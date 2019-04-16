@@ -1,5 +1,3 @@
-import * as _ from 'lodash';
-
 import * as BABYLON from '@babylonjs/core';
 
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -13,17 +11,10 @@ import { GridMaterial } from "@babylonjs/materials/grid";
 import "@babylonjs/core/Meshes/meshBuilder";
 
 
-import './css/style.css'
-import * as GUI from './gui'
+import './css/style.css';
 
-function component(): any {
-    let element = document.createElement('div');
-    // Lodash, now imported by this script
-    element.innerHTML = _.join(['Hello', 'webpack'], ' ');
-    element.classList.add('hello');
-    return element
-}
-document.body.appendChild(<HTMLDivElement>component())
+import { EventDispatcher } from './event_dispatcher';
+import { GUIController } from './gui';
 
 function initBabylon(): void {
     const canvas = document.createElement('canvas');
@@ -64,8 +55,11 @@ function initBabylon(): void {
         scene.render();
     });
 
-    let guiController: any = new GUI.GUIController();
+    let guiController: GUIController = GUIController.getInstance();
     guiController.test();
+
+    let eventDispatcher: EventDispatcher = <EventDispatcher>EventDispatcher.getInstance();
+    eventDispatcher.test();
 }
 
 initBabylon();
