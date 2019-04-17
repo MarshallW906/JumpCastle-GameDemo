@@ -13,8 +13,11 @@ import "@babylonjs/core/Meshes/meshBuilder";
 
 import './css/style.css';
 
+import * as MyTypes from "./types";
+
 import { EventDispatcher } from './event_dispatcher';
 import { GUIController } from './gui';
+import { Player } from './player';
 
 function initBabylon(): void {
     const canvas = document.createElement('canvas');

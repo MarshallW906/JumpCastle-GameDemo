@@ -44,44 +44,44 @@ export class GUIController {
 
     Loading(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = <GUIMode>"Loading";
+        this.currentGUIMode = GUIMode.Loading;
 
         // display loading GUI
     }
     Title(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = <GUIMode>"Title";
+        this.currentGUIMode = GUIMode.Title;
 
         // display Title GUI
     }
     GameRuntime(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = <GUIMode>"GameRuntime";
+        this.currentGUIMode = GUIMode.GameRuntime;
 
         // display GameRuntime GUI
     }
     GameOver(): void {
         // no need to hideGUI()
         // this.hideCurrentGUI();
-        this.currentGUIMode = <GUIMode>"GameOver";
+        this.currentGUIMode = GUIMode.GameOver;
 
         // display GameOver GUI
     }
     Win(): void {
         // no need to hideGUI()
         // this.hideCurrentGUI();
-        this.currentGUIMode = <GUIMode>"Win";
+        this.currentGUIMode = GUIMode.Win;
 
         // display Win GUI
     }
 
     // Loading, Title, GameRuntime, GameOver, Win
-    private currentGUIMode: GUIMode = "HideAll";
+    private currentGUIMode: GUIMode = GUIMode.HideAll;
     private hideCurrentGUI() {
         // hide all buttons, text labels, logos
 
         // set currentGUIMode to "HideAll"
-        this.currentGUIMode = "HideAll";
+        this.currentGUIMode = GUIMode.HideAll;
     }
 
     // buttons
