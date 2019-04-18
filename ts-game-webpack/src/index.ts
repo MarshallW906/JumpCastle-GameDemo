@@ -22,8 +22,8 @@ import { Player } from './player';
 function initBabylon(): void {
     const canvas = document.createElement('canvas');
     canvas.id = 'babylonCanvas'
-    canvas.setAttribute('width', '1024');
-    canvas.setAttribute('height', '768');
+    canvas.setAttribute('width', '800');
+    canvas.setAttribute('height', '600');
     document.body.appendChild(<HTMLCanvasElement>canvas);
 
     const engine = new Engine(canvas);
@@ -59,7 +59,7 @@ function initBabylon(): void {
     });
 
     let guiController: GUIController = GUIController.getInstance();
-    guiController.test();
+    guiController.init();
 
     let eventDispatcher: EventDispatcher = <EventDispatcher>EventDispatcher.getInstance();
     eventDispatcher.test();
