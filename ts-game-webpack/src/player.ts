@@ -1,4 +1,10 @@
+import * as Babylon from "@babylonjs/core";
+import * as Material from "@babylonjs/materials";
+// Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
+import "@babylonjs/core/Meshes/meshBuilder";
+
 import { Creature, Ticker, EventHandler, ItemCollection, NoReturnValFunc, ObjectWithMeshEntity } from './types'
+import { SceneController } from './scene';
 
 export class Player implements ObjectWithMeshEntity, Creature, Ticker {
     // interface Ticker
@@ -25,7 +31,16 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
     attack(): void { }
 
     // interface ObjectWithMeshEntity
-    initMesh: NoReturnValFunc;
+    private _playerMesh: any;
+    get playerMesh(): any { return this._playerMesh; }
+    private normalGridMaterial: any;
+    private _gameScene: any = SceneController.getInstance().gameScene;
+    initMesh(): void {
+        this._playerMesh = Babylon.MeshBuilder.CreateSphere("Player", {}, this._gameScene);
+        this.normalGridMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
+        this._playerMesh.material = this.normalGridMaterial;
+        this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, this._gameScene);
+    }
     destroy: NoReturnValFunc;
 
     // --------------------

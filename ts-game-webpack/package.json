@@ -39,6 +39,8 @@
         "@babylonjs/materials": "^4.0.0-alpha.18",
         "@babylonjs/post-processes": "^4.0.0-alpha.18",
         "@babylonjs/procedural-textures": "^4.0.0-alpha.18",
-        "@babylonjs/serializers": "^4.0.0-alpha.18"
+        "@babylonjs/serializers": "^4.0.0-alpha.18",
+        "@types/cannon": "^0.1.3",
+        "cannon": "^0.6.2"
     }
 }

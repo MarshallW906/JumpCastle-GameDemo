@@ -23,8 +23,7 @@ module.exports = {
                 'style-loader',
                 'css-loader'
             ]
-        }
-        ]
+        }]
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js']
@@ -35,11 +34,14 @@ module.exports = {
             title: 'Output Management'
         }),
         new webpack.NamedModulesPlugin(),
-        new webpack.HotModuleReplacementPlugin()
+        new webpack.HotModuleReplacementPlugin(),
+        new webpack.ProvidePlugin({
+            CANNON: 'CANNON'
+        }),
     ],
     externals: {
         oimo: 'OIMO', //or true
-        cannon: 'CANNON' //or true
+        // cannon: 'CANNON' //or true
     },
     output: {
         filename: '[name].bundle.js',
