@@ -78,13 +78,13 @@ export class SceneController {
 
     initSceneAndCamera(): void {
         this._gameScene = new Babylon.Scene(this._gameEngine);
-        this._gameScene.gravity = new Babylon.Vector3(0, -9.81, 0);
         this._physicsPlugin = new Babylon.CannonJSPlugin();
-        this._gameScene.enablePhysics();
+        let gravityVector = new Babylon.Vector3(0, -9.81, 0);
+        this._gameScene.enablePhysics(gravityVector, this._physicsPlugin);
 
         this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
-        this._followCamera.applyGravity = true;
+        // this._followCamera.applyGravity = true;
         console.log(this._followCamera.globalPosition)
 
         let light = new Babylon.HemisphericLight('hemisphericLight1', new Babylon.Vector3(0, 1, 0), this._gameScene);

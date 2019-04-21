@@ -13,9 +13,7 @@ export class GameMap {
 
     test(): void {
         console.log("gamemap test");
-        let plane1 = Babylon.MeshBuilder.CreatePlane("myPlane", { width: 5, height: 5 }, this._gameScene);
-        plane1.position = new Babylon.Vector3(0, -10, 0);
-        plane1.material = new Material.GridMaterial("planeMaterial", this._gameScene);
-        plane1.physicsImpostor = new Babylon.PhysicsImpostor(plane1, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this._gameScene);
+        let ground = Babylon.Mesh.CreateGround("ground1", 6, 6, 2, this._gameScene);
+        ground.physicsImpostor = new Babylon.PhysicsImpostor(ground, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this._gameScene);
     }
 }
