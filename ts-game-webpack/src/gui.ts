@@ -131,28 +131,26 @@ export class GUIController {
     }
 
     TestGUI(): void {
-        let buttonPlayerPosition = BabylonGUI.Button.CreateSimpleButton("ShowPlayerPosition", "P");
-        buttonPlayerPosition.top = '200px';
-        buttonPlayerPosition.background = 'blue';
-        buttonPlayerPosition.color = 'white';
-        buttonPlayerPosition.width = '20px';
-        buttonPlayerPosition.height = '20px';
-        buttonPlayerPosition.onPointerClickObservable.add(() => {
+        var that = this;
+        function createTestButton(name: string, text: string, top: string, left: string, clickCallback: () => void): void {
+            let newButton = BabylonGUI.Button.CreateSimpleButton(name, text);
+            newButton.top = top;
+            newButton.left = left;
+            newButton.onPointerClickObservable.add(clickCallback);
+
+            newButton.width = '20px';
+            newButton.height = '20px';
+            newButton.background = 'blue';
+            newButton.color = 'white';
+            that.advancedTexture.addControl(newButton);
+        }
+
+        createTestButton("ShowPlayerPosition", "P", '200px', '0', () => {
             console.log("player position", SceneController.getInstance().player.playerMesh.position);
         });
-        this.advancedTexture.addControl(buttonPlayerPosition);
-
-        let buttonCameraPosition = BabylonGUI.Button.CreateSimpleButton("ShowCameraPosition", "C");
-        buttonCameraPosition.top = '200px';
-        buttonCameraPosition.left = '20px';
-        buttonCameraPosition.background = 'blue';
-        buttonCameraPosition.color = 'white';
-        buttonCameraPosition.width = '20px';
-        buttonCameraPosition.height = '20px';
-        buttonCameraPosition.onPointerClickObservable.add(() => {
+        createTestButton("ShowCameraPosition", "C", '200px', '20px', () => {
             console.log("camera global position", SceneController.getInstance().followCamera.globalPosition);
         });
-        this.advancedTexture.addControl(buttonCameraPosition);
     }
 
     UpdateHPBar(curHP: number): void { }

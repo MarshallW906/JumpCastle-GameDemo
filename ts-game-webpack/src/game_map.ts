@@ -13,7 +13,7 @@ export class GameMap {
 
     test(): void {
         console.log("gamemap test");
-        let ground = Babylon.Mesh.CreateGround("ground1", 6, 6, 2, this._gameScene);
+        let ground = Babylon.Mesh.CreateGround("ground1", 60, 60, 2, this._gameScene);
         ground.physicsImpostor = new Babylon.PhysicsImpostor(ground, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0.9 }, this._gameScene);
     }
 }
