@@ -57,6 +57,8 @@ export interface Creature {
     addAttackDamage: QuantityChangeFunc;
     subtractAttackDamage: QuantityChangeFunc;
     attack: NoReturnValFunc;
+
+    initProperties: NoReturnValFunc;
 }
 
 export interface ObjectWithMeshEntity {
@@ -74,3 +76,6 @@ export interface Ticker {
 
 // Item
 export type ItemCollection = Map<ItemType, number>;
+
+// Move
+export enum MoveDirection { Left, Right };

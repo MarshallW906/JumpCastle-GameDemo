@@ -28,8 +28,8 @@ export class SceneController {
 
     private _gameCanvas: HTMLCanvasElement;
     private _gameEngine: Babylon.Engine;
-    private _gameScene: any;
-    get gameScene(): any { return this._gameScene; }
+    private _gameScene: Babylon.Scene;
+    get gameScene(): Babylon.Scene { return this._gameScene; }
 
     private _followCamera: any;
     get followCamera(): any { return this._followCamera; }
@@ -48,7 +48,7 @@ export class SceneController {
 
         // game elements
         this.initGUI();
-        this.initPlayer();
+        this.initPlayer(); // also registered keyboard inputs
         this.initMap();
         this.initItem();
         this.initEnemy();
@@ -82,7 +82,7 @@ export class SceneController {
         let gravityVector = new Babylon.Vector3(0, -9.81, 0);
         this._gameScene.enablePhysics(gravityVector, this._physicsPlugin);
 
-        this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -100), this._gameScene);
+        this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
         this._followCamera.applyGravity = true;
         console.log(this._followCamera.globalPosition)
@@ -102,7 +102,7 @@ export class SceneController {
 
     initPlayer(): void {
         this._player = new Player();
-        this._player.initMesh();
+        this._player.init();
         this._followCamera.lockedTarget = this.player.playerMesh;
     }
 

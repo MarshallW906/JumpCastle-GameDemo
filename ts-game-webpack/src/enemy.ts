@@ -24,6 +24,13 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker {
     subtractAttackDamage: QuantityChangeFunc;
     attack: NoReturnValFunc = NoReturnValFuncNoOp;
 
+    initProperties(): void {
+        this.HP = 100;
+        this.SP = 0;
+        this.moveSpeed = 0.1;
+        this.attackDamage = 5;
+    }
+
     // interface ObjectWithMeshEntity
     initMesh: NoReturnValFunc;
     destroy: NoReturnValFunc;
