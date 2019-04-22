@@ -2,7 +2,6 @@ import * as BabylonGUI from "@babylonjs/gui";
 import * as BABYLON from "@babylonjs/core";
 
 import { GUIMode, ItemCollection } from './types';
-import { Button, AdvancedDynamicTexture } from "@babylonjs/gui";
 import { SceneController } from "./scene";
 
 /**

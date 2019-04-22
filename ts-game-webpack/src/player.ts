@@ -35,7 +35,7 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
         this.HP = 100;
         this.SP = 100;
         this.SPRecoverSpeed = 0;
-        this.moveSpeed = 0.1;
+        this.moveSpeed = 0.3;
         this.attackDamage = 5;
     }
 
@@ -49,9 +49,10 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
         // this._playerMesh = Babylon.MeshBuilder.CreateSphere("Player", {}, this._gameScene);
         // this.normalGridMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
         // this._playerMesh.material = this.normalGridMaterial;
-        this._playerMesh = Babylon.Mesh.CreateSphere("PlayerSphere", 8, 2, this._gameScene);
+        // this._playerMesh = Babylon.Mesh.CreateSphere("PlayerSphere", 8, 2, this._gameScene);
+        this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 1, this._gameScene);
         this._playerMesh.position.y = 3;
-        this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.SphereImpostor, { mass: 1, restitution: 0.9 }, this._gameScene);
+        this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
     }
     destroy: NoReturnValFunc;
 
@@ -171,8 +172,41 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
     teleportPointsUnlocked: Array<boolean>;
 
     // jump
-    jump(): void { }
-    firstJump: boolean;
+    jump(): void {
+        let that = this;
+        function performJump(): void {
+            let velocity: Babylon.Vector3 = new Babylon.Vector3(0, 7, 0);
+            if (that.keyMapStates.get('W') || that.keyMapStates.get('w')) {
+                velocity.y += 3; // 10
+            }
+            if (that.keyMapStates.get('S') || that.keyMapStates.get('s')) {
+                if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
+                    velocity.x += 3;
+                }
+                if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
+                    velocity.x += -3;
+                }
+            }
+            that._playerMesh.physicsImpostor.setLinearVelocity(velocity);
+            console.log(that._playerMesh.physicsImpostor.getLinearVelocity());
+        }
+
+        performJump();
+        /* real jump() code
+        if (this._firstJump && this._secondJump) {
+            return;
+        }
+        if (!this._firstJump) {
+            this._firstJump = true;
+            performJump();
+        } else if (!this._secondJump) { // when firstJump is true, test secondJump
+            this._secondJump = true;
+            performJump();
+        }
+        */
+    }
+    private _firstJump: boolean;
+    private _secondJump: boolean;
 
     // shield
     shield(): void { }
@@ -186,11 +220,11 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
         switch (direction) {
             case MoveDirection.Left:
                 // move to left
-                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.LOCAL);
+                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.WORLD);
                 break;
             case MoveDirection.Right:
                 // move to right
-                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.LOCAL);
+                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.WORLD);
                 break;
         }
     }

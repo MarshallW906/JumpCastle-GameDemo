@@ -1,9 +1,4 @@
 import * as Babylon from '@babylonjs/core';
-import * as Material from "@babylonjs/materials";
-// Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
-import "@babylonjs/core/Meshes/meshBuilder";
-
-import * as CANNON from 'cannon';
 
 import { Player } from './player';
 import { GUIController } from './gui';
@@ -31,8 +26,8 @@ export class SceneController {
     private _gameScene: Babylon.Scene;
     get gameScene(): Babylon.Scene { return this._gameScene; }
 
-    private _followCamera: any;
-    get followCamera(): any { return this._followCamera; }
+    private _followCamera: Babylon.FollowCamera;
+    get followCamera(): Babylon.FollowCamera { return this._followCamera; }
     private _physicsPlugin: any;
 
     private _player: Player;
@@ -84,7 +79,12 @@ export class SceneController {
 
         this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
-        this._followCamera.applyGravity = true;
+        this._followCamera.radius = 20;
+        this._followCamera.noRotationConstraint = true;
+        this._followCamera.heightOffset = 0;
+
+        // this._followCamera.mode = Babylon.Camera.ORTHOGRAPHIC_CAMERA; // try ortho?
+
         console.log(this._followCamera.globalPosition)
         console.log(this._followCamera.rotation);
 

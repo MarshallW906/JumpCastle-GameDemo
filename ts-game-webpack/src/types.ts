@@ -61,6 +61,12 @@ export interface Creature {
     initProperties: NoReturnValFunc;
 }
 
+
+/**
+ * can use this form to unite different types of funcs:
+ * type ddd = (ttt: string) => number;
+ * initMesh: NoReturnValFunc | ddd;
+ */
 export interface ObjectWithMeshEntity {
     initMesh: NoReturnValFunc;
     destroy: NoReturnValFunc;
