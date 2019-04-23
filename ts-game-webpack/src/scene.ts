@@ -4,6 +4,8 @@ import { Player } from './player';
 import { GUIController } from './gui';
 import { EventDispatcher } from './event_dispatcher';
 import { GameMap } from './game_map';
+import { ItemFactory } from './item';
+import { BulletFactory } from './bullet';
 
 export class SceneController {
     // -----------singleton-------------
@@ -33,6 +35,8 @@ export class SceneController {
     private _player: Player;
     get player(): Player { return this._player; }
     private _gameMap: GameMap;
+    private _itemFactory: ItemFactory;
+    private _bulletFactory: BulletFactory;
 
     private _eventDispatcher: EventDispatcher = EventDispatcher.getInstance();
 
@@ -46,6 +50,7 @@ export class SceneController {
         this.initPlayer(); // also registered keyboard inputs
         this.initMap();
         this.initItem();
+        this.initBulletFactory();
         this.initEnemy();
 
         this.initEventDispatcher();
@@ -108,8 +113,8 @@ export class SceneController {
 
     initMap(): void {
         this._gameMap = new GameMap();
-        this._gameMap.test();
         this._gameMap.initMap();
+        this._gameMap.test();
     }
 
     initEnemy(): void {
@@ -117,7 +122,13 @@ export class SceneController {
     }
 
     initItem(): void {
+        this._itemFactory = new ItemFactory();
+        this._itemFactory.test();
+    }
 
+    initBulletFactory(): void {
+        this._bulletFactory = new BulletFactory();
+        this._bulletFactory.test();
     }
 
     initEventDispatcher(): void {

@@ -3,7 +3,6 @@ import { Vector3 } from "@babylonjs/core";
 import { Buff } from "./buff";
 
 // Types: Enum
-export enum ItemType { }
 export enum MonsterType { }
 export enum BuffType { Permanent, Time, DependOnMap }
 
@@ -85,7 +84,15 @@ export interface Ticker {
 }
 
 // Item
+export enum ItemType { SoulBall, HPRecovery, SPRecovery }
+
 export type ItemCollection = Map<ItemType, number>;
+
+export interface ItemInfo {
+    type: ItemType,
+    quantity: number,
+    price?: number
+}
 
 // Move
 export enum MoveDirection { Left, Right };

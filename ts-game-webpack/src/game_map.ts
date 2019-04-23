@@ -95,6 +95,11 @@ export class GameMap {
     private _mapBlockList: Array<MapBlock>;
     private _mapInfo: Array<MapBlockInfo>;
 
+    constructor() {
+        this._mapBlockList = new Array<MapBlock>();
+        this._mapInfo = new Array<MapBlockInfo>();
+    }
+
     private initMapInfo(): void {
         // console.log(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
@@ -128,9 +133,6 @@ export class GameMap {
     }
 
     initMap(): void {
-        this._mapBlockList = new Array<MapBlock>();
-        this._mapInfo = new Array<MapBlockInfo>();
-
         this.initMapInfo();
         this.initCurrentMapBlocks();
     }
