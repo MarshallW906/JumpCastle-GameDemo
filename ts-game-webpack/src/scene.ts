@@ -109,6 +109,7 @@ export class SceneController {
     initMap(): void {
         this._gameMap = new GameMap();
         this._gameMap.test();
+        this._gameMap.initMap();
     }
 
     initEnemy(): void {

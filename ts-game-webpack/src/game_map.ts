@@ -1,22 +1,29 @@
 import * as Babylon from "@babylonjs/core";
 // import * as Material from "@babylonjs/materials";
 
+import * as _ from "lodash";
+
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
 import { SceneController } from "./scene";
-import { ObjectWithMeshEntity, NoReturnValFunc, MapBlockType } from "./types";
+import { ObjectWithMeshEntity, NoReturnValFunc, MapBlockType, MapBlockSize, MapBlockAttributes, MapBlockInfo } from "./types";
+import { Buff } from "./buff";
 
 export class MapBlock {
     /**
      * 
-     * @param length : will be used as "width" of a new Box Mesh
-     * @param location : y is always 0, so only needs position.x & position.z
+     * @param id 
+     * @param name 
+     * @param mapBlockInfo 
      */
-    constructor(id: number, name: string, type: number, length: number, location: Babylon.Vector3) {
+    constructor(id: number, name: string, mapBlockInfo: MapBlockInfo) {
         this._id = id;
         this._name = name;
-        this._type = type;
-        this.initMesh({ width: length, height: 0.2, depth: 10 }, location);
+        this._type = mapBlockInfo.type;
+        this.initMesh({ width: mapBlockInfo.length, height: 0.2, depth: 10 }, mapBlockInfo.location);
+        if (mapBlockInfo.type & MapBlockType.Plain) {
+            this.initAttributes(mapBlockInfo.attributes);
+        }
     }
 
     private _id: number;
@@ -25,13 +32,27 @@ export class MapBlock {
     get name(): string { return this._name; }
 
     private _mesh: Babylon.Mesh;
+
     // interface ObjectWithMeshEntity
     // now initMesh might need some params, so this interface might be changed
-    initMesh(size: { width: number, height: number, depth: number }, location: Babylon.Vector3): void {
+
+    initMesh(size: MapBlockSize, location: Babylon.Vector3): void {
         if (location.z != 0) {
             throw Error("MapBlock location.z is not 0 !");
         }
-        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, size, SceneController.getInstance().gameScene);
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, size, gameScene);
+        this._mesh.physicsImpostor = new Babylon.PhysicsImpostor(this._mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, gameScene);
+        this._mesh.position = location;
+
+        if (this._type == MapBlockType.Plain) return;
+
+        if (this._type & MapBlockType.Trap) {
+            console.log(this._name, "is also a Trap. Currently not implemented yet..");
+        }
+        if (this._type & MapBlockType.Modifier) {
+            console.log(this._name, "is also a Trap. Currently not implemented yet..");
+        }
     }
 
     destroy: NoReturnValFunc;
@@ -39,11 +60,80 @@ export class MapBlock {
     // other attributes
     private _type: number; // Plain, Trap, Modifier, (or combination of these types, use |(or) )
     private _damage: number;
-    // private _modifiers: Array<Buff>;
+    private _modifiers: Array<Buff>;
+
+    initAttributes(blockAttributes: MapBlockAttributes): void {
+        if (this._type & MapBlockType.Trap) {
+            this._damage = blockAttributes.damagePerSecond;
+        }
+        if (this._type & MapBlockType.Modifier) {
+            this._modifiers = blockAttributes.buffs;
+        }
+    }
+
+    // static functions
+
+    /**
+     * the return type is a MapBlockInfo (interface)
+     */
+    static getPlainMapBlockInfo(length: number, location: Babylon.Vector3): MapBlockInfo {
+        return {
+            type: MapBlockType.Plain,
+            length: length,
+            location: location,
+            attributes: {}
+        }
+    }
+
+    static createSimpleBoxImposter(mesh: any): Babylon.PhysicsImpostor {
+        return new Babylon.PhysicsImpostor(mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, SceneController.getInstance().gameScene);
+    }
 }
 
 export class GameMap {
-    private _gameScene: any = SceneController.getInstance().gameScene;
+    private _gameScene = SceneController.getInstance().gameScene;
+    private _mapBlockList: Array<MapBlock>;
+    private _mapInfo: Array<MapBlockInfo>;
+
+    private initMapInfo(): void {
+        // console.log(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
+        this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
+    };
+
+    private createNewMapBlock(mapBlockInfo: MapBlockInfo): void {
+        console.log(mapBlockInfo);
+        let blockTypeNameArray = new Array<string>();
+        blockTypeNameArray.push("MapBlock");
+
+        if (mapBlockInfo.type == MapBlockType.Plain) {
+            blockTypeNameArray.push("Plain");
+        } else {
+            if (mapBlockInfo.type | MapBlockType.Trap) {
+                blockTypeNameArray.push("Trap");
+            }
+            if (mapBlockInfo.type | MapBlockType.Modifier) {
+                blockTypeNameArray.push("Modifier");
+            }
+        }
+        blockTypeNameArray.push(this._mapBlockList.length.toString());
+
+        let newBlockName = _.join(blockTypeNameArray, '-');
+        this._mapBlockList.push(new MapBlock(this._mapBlockList.length, newBlockName, mapBlockInfo));
+    }
+
+    private initCurrentMapBlocks(): void {
+        this._mapInfo.forEach((mapBlockInfo: MapBlockInfo) => {
+            this.createNewMapBlock(mapBlockInfo);
+        })
+    }
+
+    initMap(): void {
+        this._mapBlockList = new Array<MapBlock>();
+        this._mapInfo = new Array<MapBlockInfo>();
+
+        this.initMapInfo();
+        this.initCurrentMapBlocks();
+    }
 
     test(): void {
         console.log("gamemap test");

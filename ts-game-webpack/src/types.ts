@@ -1,4 +1,6 @@
-import { number } from "prop-types";
+import { Vector3 } from "@babylonjs/core";
+
+import { Buff } from "./buff";
 
 // Types: Enum
 export enum ItemType { }
@@ -94,4 +96,29 @@ export namespace MapBlockType {
     export let Trap = 0x00000001;
     export let Modifier = 0x00000010;
     export let TrapAndModifier = Trap | Modifier;
+}
+
+export interface MapBlockSize {
+    width: number,
+    height: number,
+    depth: number
+}
+
+export interface MapBlockAttributes {
+    /**
+     * applicable if the mapBlock is a trap.
+     */
+    damagePerSecond?: number,
+
+    /**
+     * applicable if the mapBlock is a modifier.
+     */
+    buffs?: Array<Buff>;
+}
+
+export interface MapBlockInfo {
+    type: number;
+    length: number;
+    location: Vector3;
+    attributes?: MapBlockAttributes;
 }
