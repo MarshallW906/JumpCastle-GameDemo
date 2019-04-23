@@ -1,3 +1,5 @@
+import { number } from "prop-types";
+
 // Types: Enum
 export enum ItemType { }
 export enum MonsterType { }
@@ -85,3 +87,11 @@ export type ItemCollection = Map<ItemType, number>;
 
 // Move
 export enum MoveDirection { Left, Right };
+
+// MapBLock
+export namespace MapBlockType {
+    export let Plain = 0x00000000;
+    export let Trap = 0x00000001;
+    export let Modifier = 0x00000010;
+    export let TrapAndModifier = Trap | Modifier;
+}
