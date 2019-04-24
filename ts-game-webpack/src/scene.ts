@@ -6,6 +6,8 @@ import { EventDispatcher } from './event_dispatcher';
 import { GameMap } from './game_map';
 import { ItemFactory } from './item';
 import { BulletFactory } from './bullet';
+import { EventType } from './types';
+import { EnemyFactory } from './enemy';
 
 export class SceneController {
     // -----------singleton-------------
@@ -36,14 +38,20 @@ export class SceneController {
     get player(): Player { return this._player; }
     private _gameMap: GameMap;
     private _itemFactory: ItemFactory;
+    get itemFactory(): ItemFactory { return this._itemFactory; }
     private _bulletFactory: BulletFactory;
+    get bulletFactory(): BulletFactory { return this._bulletFactory; }
+    private _enemyFactory: EnemyFactory;
+    get enemyFactory(): EnemyFactory { return this._enemyFactory; }
 
-    private _eventDispatcher: EventDispatcher = EventDispatcher.getInstance();
+    private _eventDispatcher: EventDispatcher;
 
     initAll(): void {
         // canvas, engine, scene
         this.initCanvasAndEngine();
         this.initSceneAndCamera();
+
+        this.initEventDispatcher();
 
         // game elements
         this.initGUI();
@@ -52,8 +60,6 @@ export class SceneController {
         this.initItem();
         this.initBulletFactory();
         this.initEnemy();
-
-        this.initEventDispatcher();
     }
 
     initCanvasAndEngine(): void {
@@ -132,6 +138,10 @@ export class SceneController {
     }
 
     initEventDispatcher(): void {
+        this._eventDispatcher = EventDispatcher.getInstance();
+        this._eventDispatcher.init();
+
         this._eventDispatcher.test();
+        this._eventDispatcher.registerEventType(EventType.ItemCollideWithPlayer);
     }
 }

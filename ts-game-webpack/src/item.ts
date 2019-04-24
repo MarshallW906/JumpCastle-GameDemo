@@ -1,12 +1,13 @@
 import * as Babylon from "@babylonjs/core";
 import * as _ from "lodash";
 
-import { ItemType, ItemInfo } from './types';
+import { ItemType, ItemInfo, EventSubscriber, EventPublisher, EventMessage, EventHandler, EventType } from './types';
 import { SceneController } from "./scene";
-import { type } from "os";
+import { EventDispatcher } from "./event_dispatcher";
 
-export class Item {
+export class Item implements EventPublisher, EventSubscriber {
     private _id: number;
+    get id(): number { return this._id; }
     private _name: string;
     private _type: ItemType;
     get type(): ItemType { return this._type; }
@@ -23,6 +24,8 @@ export class Item {
         this._price = itemInfo.price;
 
         this.initMesh(location);
+        this.initEventDetector();
+        this.registerEventHandler();
     }
 
     initMesh(location: Babylon.Vector3): void {
@@ -30,14 +33,47 @@ export class Item {
             throw Error("Item location.z is not 0 !");
         }
         this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
-        // then add a collider
-        // this._mesh.collider = 
         this._mesh.position = location;
+        this._mesh.collisionMask
         // set color ...
+    }
+
+    initEventDetector(): void {
+        let player = SceneController.getInstance().player;
+        let that = this;
+        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager.registerAction(
+            new Babylon.ExecuteCodeAction({
+                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+                parameter: {
+                    mesh: SceneController.getInstance().player.playerMesh,
+                    usePreciseIntersection: true
+                }
+            }, (evt: Babylon.ActionEvent) => {
+                console.log("item collide with Player, OnIntersectionEnterTrigger");
+                console.log(evt);
+                EventDispatcher.getInstance().receiveEvent(EventType.ItemCollideWithPlayer, {
+                    object: that,
+                    message: "Item Collide With Player"
+                });
+            })
+        )
+
+    }
+
+    registerEventHandler(): void {
+        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, this.onCollisionWithPlayer);
+    }
+
+    private onCollisionWithPlayer(eventType: EventType, eventMessage: EventMessage) {
+        console.log(eventType, eventMessage);
+
+        // self remove
+        this._mesh.dispose();
     }
 }
 
-export class ItemFactory {
+export class ItemFactory implements EventSubscriber {
     private _items: Array<Item>;
 
     constructor() {
@@ -67,5 +103,14 @@ export class ItemFactory {
      */
     destroyItem(itemId: number): void {
         delete this._items[itemId];
+    }
+
+    // interface EventSubscriber
+    registerEventHandler(): void {
+        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, this.onItemCollideWithPlayer);
+    }
+
+    private onItemCollideWithPlayer(eventType: EventType, eventMessage: EventMessage): void {
+        this.destroyItem(eventMessage.object.id);
     }
 }

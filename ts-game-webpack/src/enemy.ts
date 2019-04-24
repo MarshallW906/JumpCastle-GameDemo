@@ -1,6 +1,10 @@
-import { Creature, QuantityChangeFunc, QuantityChangeFuncNoOp, NoReturnValFunc, Ticker, ItemCollection, EventHandler, ObjectWithMeshEntity, NoReturnValFuncNoOp } from "./types";
+import * as Babylon from "@babylonjs/core";
 
-export class Enemy implements ObjectWithMeshEntity, Creature, Ticker {
+import { Creature, QuantityChangeFunc, QuantityChangeFuncNoOp, NoReturnValFunc, Ticker, ItemCollection, EventHandler, ObjectWithMeshEntity, NoReturnValFuncNoOp, EventSubscriber, EventPublisher, EventType, EventMessage } from "./types";
+import { SceneController } from "./scene";
+import { EventDispatcher } from "./event_dispatcher";
+
+export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPublisher, EventSubscriber {
     // interface Ticker
     tick_interval: number;
     tick: NoReturnValFunc;
@@ -31,6 +35,8 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker {
         this.attackDamage = 5;
     }
 
+    private _mesh: Babylon.Mesh;
+    get mesh(): Babylon.Mesh { return this._mesh; }
     // interface ObjectWithMeshEntity
     initMesh: NoReturnValFunc;
     destroy: NoReturnValFunc;
@@ -38,18 +44,59 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker {
 
     // --------------------
     // Monster
+    private _id: number;
+    get id(): number { return this._id; }
     gold: number;
     // dropGold()?
     items: ItemCollection;
 
+    initEventDetector(): void {
+        // collide with player
+        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager.registerAction(
+            new Babylon.ExecuteCodeAction({
+                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+                parameter: {
+                    mesh: SceneController.getInstance().player.playerMesh,
+                    usePreciseIntersection: true
+                }
+            }, (evt: Babylon.ActionEvent) => {
+                EventDispatcher.getInstance().receiveEvent(EventType.EnemyCollideWithPlayer, {
+                    object: this._mesh,
+                    message: "Enemy collide with Player"
+                })
+            })
+        );
+
+        // collide with special map block? (optional....)
+    }
+    registerEventHandler(): void {
+        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, this.onCollideWithBullets);
+        // EventDispatcher.getInstance().addEventHandler
+    }
+
     // event handler
-    private onCollideWithBullets: EventHandler;
+    private onCollideWithBullets(eventType: EventType, eventMessage: EventMessage) {
+        if (this._id == eventMessage.object.enemy.id) {
+            this.subtractHP(eventMessage.object.bullet.damage);
+            // check if self is dead (HP <= 0)
+        }
+    }
     // private onCollideWithSpecialMapBlock: EventHandler;
     // private onCollideWithNormalMapBlock: EventHandler;
 
 }
 
 
-export class EnemyFactory {
+export class EnemyFactory implements EventSubscriber {
+    private _enemies: Array<Enemy>;
+    get enemies(): Array<Enemy> { return this._enemies; }
 
+    constructor() {
+        this._enemies = new Array<Enemy>();
+    }
+
+    registerEventHandler(): void {
+        throw new Error("Method not implemented.");
+    }
 }

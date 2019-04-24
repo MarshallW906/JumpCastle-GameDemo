@@ -1,6 +1,7 @@
 import { Vector3 } from "@babylonjs/core";
 
 import { Buff } from "./buff";
+import { EventDispatcher } from "./event_dispatcher";
 
 // Types: Enum
 export enum MonsterType { }
@@ -18,8 +19,12 @@ export function QuantityChangeFuncNoOp(quantity: number): void {
     console.log("Below is the object where this func is called.", this)
 }
 
-// event
-export type EventType = string;
+// Event
+export enum EventType {
+    ItemCollideWithPlayer,
+    BulletCollideWithEnemy,
+    EnemyCollideWithPlayer,
+}
 
 export type EventMessage = {
     object: any,
@@ -28,12 +33,13 @@ export type EventMessage = {
 
 export type EventHandler = (eventType: EventType, eventMessage: EventMessage) => void;
 
+
 export interface EventPublisher {
-    publishEventMessage(): void;
+    initEventDetector(): void;
 }
 
 export interface EventSubscriber { // think it might needs to be changed
-    subscribeEvent(eventType: EventType, eventMsg: EventMessage, eventHandler: EventHandler): void;
+    registerEventHandler(): void;
 }
 
 // GUI
