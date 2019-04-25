@@ -3,34 +3,39 @@ import * as Material from "@babylonjs/materials";
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
 
-import { Creature, Ticker, EventHandler, ItemCollection, NoReturnValFunc, ObjectWithMeshEntity, MoveDirection, EventType, EventMessage, EventSubscriber } from './types'
+import * as MyTypes from './types'
 import { SceneController } from './scene';
 import { EventDispatcher } from "./event_dispatcher";
+import { Enemy } from "./enemy";
 
 
-export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubscriber {
+export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, MyTypes.Ticker, MyTypes.EventSubscriber {
     // interface Ticker
     tick_interval: number;
     tick(): void { }
 
     // interface Creature
     HP: number
-    addHP(quantity: number): void { }
-    subtractHP(quantity: number): void { }
+    addHP(quantity: number): void { this.HP += quantity; }
+    subtractHP(quantity: number): void { this.HP -= quantity; }
 
     SP: number
     SPRecoverSpeed: number
-    addSP(quantity: number): void { }
-    subtractSP(quantity: number): void { }
+    addSP(quantity: number): void { this.SP += quantity; }
+    subtractSP(quantity: number): void { this.SP -= quantity; }
 
     moveSpeed: number
-    addMoveSpeed(quantity: number): void { }
-    subtractMoveSpeed(quantity: number): void { }
+    addMoveSpeed(quantity: number): void { this.moveSpeed += quantity; }
+    subtractMoveSpeed(quantity: number): void { this.moveSpeed -= quantity; }
 
     attackDamage: number
-    addAttackDamage(quantity: number): void { }
-    subtractAttackDamage(quantity: number): void { }
-    attack(): void { }
+    addAttackDamage(quantity: number): void { this.attackDamage += quantity; }
+    subtractAttackDamage(quantity: number): void { this.attackDamage -= quantity; }
+
+    attack(): void {
+        SceneController.getInstance().bulletFactory.createNewBullet(
+            this.attackDamage, this._playerMesh.position, this.currentDirection);
+    }
 
     initProperties(): void {
         this.HP = 100;
@@ -54,8 +59,13 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubs
         this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 1, this._gameScene);
         this._playerMesh.position.y = 3;
         this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
+
+        let that = this;
+        this._gameScene.registerBeforeRender(() => {
+            that.playerMesh.physicsImpostor.setAngularVelocity(Babylon.Vector3.Zero());
+        })
     }
-    destroy: NoReturnValFunc;
+    destroy: MyTypes.NoReturnValFunc;
 
     private keyMapStates: Map<string, boolean>;
     private registerKeyboardActions(): void {
@@ -140,11 +150,11 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubs
         this._gameScene.registerBeforeRender(() => {
             if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
                 console.log("A. Move to Left");
-                that.move(MoveDirection.Left);
+                that.move(MyTypes.MoveDirection.Left);
             }
             if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
                 console.log("D. Move to Right");
-                that.move(MoveDirection.Right);
+                that.move(MyTypes.MoveDirection.Right);
             }
         })
     }
@@ -166,7 +176,7 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubs
     soul: number;
     addSoul(quantity: number): void { this.soul += quantity; }
 
-    items: ItemCollection;
+    items: MyTypes.ItemCollection;
 
     /**
      * Record teleport points.
@@ -218,20 +228,23 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubs
     // shield
     shield(): void { }
 
+    currentDirection: MyTypes.MoveDirection;
     /**
      * Currently Left means to add position.x, Right means to subtract position.x.
      * Might change the camera settings to "Left = subtract, Right = add"
      * @param direction 
      */
-    move(direction: MoveDirection): void {
+    move(direction: MyTypes.MoveDirection): void {
         switch (direction) {
-            case MoveDirection.Left:
+            case MyTypes.MoveDirection.Left:
                 // move to left
                 this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.WORLD);
+                this.currentDirection = MyTypes.MoveDirection.Left;
                 break;
-            case MoveDirection.Right:
+            case MyTypes.MoveDirection.Right:
                 // move to right
                 this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.WORLD);
+                this.currentDirection = MyTypes.MoveDirection.Right;
                 break;
         }
     }
@@ -241,21 +254,39 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubs
     teleportToNextPortal(): void { }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
     }
 
     // event handler
-    private onCollideWithMonster: EventHandler;
+    static getFnOnCollideWithEnemy(object: any): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (object != SceneController.getInstance().player) return;
+
+            (<Player>object).subtractHP((<Enemy>eventMessage.object).attackDamage);
+        });
+    }
     static getFnOnCollideWithNormalMapBlock(object: any) {
-        return (eventType: EventType, eventMessage: EventMessage) => {
+        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             console.log("Event handler Mapblock collide with player")
             if (object != SceneController.getInstance().player) return;
 
-            <Player>object.resetJumpState();
+            (<Player>object).resetJumpState();
         }
     }
     // private onCollideWithSpecialMapBlock: EventHandler;
-    private onCollideWithItem: EventHandler;
-    private onCollideWithSoulball: EventHandler;
-    private onCollideWithTeleportPoint: EventHandler;
+    static getFnOnCollideWithItem(object: any): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (object != SceneController.getInstance().player) return;
+
+            // (<Player>object)
+        });
+    }
+
+    static getFnOnCollideWithTeleportPoint(object: any): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (object != SceneController.getInstance().player) return;
+
+            // (<Player>object)
+        })
+    }
 }

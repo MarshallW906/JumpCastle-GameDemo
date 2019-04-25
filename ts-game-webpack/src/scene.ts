@@ -58,9 +58,11 @@ export class SceneController {
         this.initPlayer(); // also registered keyboard inputs
         this.initMap();
         this.initItem();
+        this.initEnemyFactory();
         this.initBulletFactory();
-        this.initEnemy();
     }
+
+    restart(): void { this.initAll(); }
 
     initCanvasAndEngine(): void {
         this._gameCanvas = document.createElement('canvas');
@@ -79,7 +81,7 @@ export class SceneController {
 
         this._gameEngine.runRenderLoop(() => {
             this._gameScene.render();
-        })
+        });
     }
 
     initSceneAndCamera(): void {
@@ -123,8 +125,8 @@ export class SceneController {
         // this._gameMap.test();
     }
 
-    initEnemy(): void {
-
+    initEnemyFactory(): void {
+        this._enemyFactory = new EnemyFactory();
     }
 
     initItem(): void {

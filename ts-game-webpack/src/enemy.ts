@@ -43,7 +43,7 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPubli
 
 
     // --------------------
-    // Monster
+    // Enemy
     private _id: number;
     get id(): number { return this._id; }
     gold: number;
@@ -52,6 +52,7 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPubli
 
     initEventDetector(): void {
         // collide with player
+        let that = this;
         this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
         this._mesh.actionManager.registerAction(
             new Babylon.ExecuteCodeAction({
@@ -62,7 +63,7 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPubli
                 }
             }, (evt: Babylon.ActionEvent) => {
                 EventDispatcher.getInstance().receiveEvent(EventType.EnemyCollideWithPlayer, {
-                    object: this._mesh,
+                    object: that,
                     message: "Enemy collide with Player"
                 })
             })

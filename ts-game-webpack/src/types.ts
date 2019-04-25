@@ -4,7 +4,7 @@ import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
 
 // Types: Enum
-export enum MonsterType { }
+export enum EnemyType { }
 export enum BuffType { Permanent, Time, DependOnMap }
 
 // general func alias
