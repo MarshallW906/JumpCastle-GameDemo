@@ -6,10 +6,11 @@ import * as _ from "lodash";
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
 import { SceneController } from "./scene";
-import { ObjectWithMeshEntity, NoReturnValFunc, MapBlockType, MapBlockSize, MapBlockAttributes, MapBlockInfo } from "./types";
+import { NoReturnValFunc, MapBlockType, MapBlockSize, MapBlockAttributes, MapBlockInfo, EventPublisher, EventType } from "./types";
 import { Buff } from "./buff";
+import { EventDispatcher } from "./event_dispatcher";
 
-export class MapBlock {
+export class MapBlock implements EventPublisher {
     /**
      * 
      * @param id 
@@ -24,6 +25,7 @@ export class MapBlock {
         if (mapBlockInfo.type & MapBlockType.Plain) {
             this.initAttributes(mapBlockInfo.attributes);
         }
+        this.initEventDetector();
     }
 
     private _id: number;
@@ -71,6 +73,27 @@ export class MapBlock {
         }
     }
 
+    initEventDetector(): void {
+        let that = this;
+        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager.registerAction(
+            new Babylon.ExecuteCodeAction({
+                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+                parameter: {
+                    mesh: SceneController.getInstance().player.playerMesh,
+                    usePreciseIntersection: true
+                }
+            }, (evt: Babylon.ActionEvent) => {
+                console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
+                console.log(evt);
+                EventDispatcher.getInstance().receiveEvent(EventType.MapBlockCollideWithPlayer, {
+                    object: that,
+                    message: "MapBlock Collide With Player"
+                });
+            })
+        );
+    }
+
     // static functions
 
     /**
@@ -103,6 +126,7 @@ export class GameMap {
     private initMapInfo(): void {
         // console.log(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
+        this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, Babylon.Vector3.Zero()));
     };
 
     private createNewMapBlock(mapBlockInfo: MapBlockInfo): void {

@@ -24,6 +24,7 @@ export enum EventType {
     ItemCollideWithPlayer,
     BulletCollideWithEnemy,
     EnemyCollideWithPlayer,
+    MapBlockCollideWithPlayer,
 }
 
 export type EventMessage = {

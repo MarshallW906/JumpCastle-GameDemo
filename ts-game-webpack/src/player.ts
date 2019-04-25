@@ -3,11 +3,12 @@ import * as Material from "@babylonjs/materials";
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
 
-import { Creature, Ticker, EventHandler, ItemCollection, NoReturnValFunc, ObjectWithMeshEntity, MoveDirection } from './types'
+import { Creature, Ticker, EventHandler, ItemCollection, NoReturnValFunc, ObjectWithMeshEntity, MoveDirection, EventType, EventMessage, EventSubscriber } from './types'
 import { SceneController } from './scene';
+import { EventDispatcher } from "./event_dispatcher";
 
 
-export class Player implements ObjectWithMeshEntity, Creature, Ticker {
+export class Player implements ObjectWithMeshEntity, Creature, Ticker, EventSubscriber {
     // interface Ticker
     tick_interval: number;
     tick(): void { }
@@ -156,6 +157,7 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
         this.initMesh();
         this.registerKeyboardActions();
         this.registerAfterRenderFuncs();
+        this.registerEventHandler();
     }
 
     gold: number;
@@ -191,8 +193,9 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
             console.log(that._playerMesh.physicsImpostor.getLinearVelocity());
         }
 
-        performJump();
-        /* real jump() code
+        // performJump();
+
+        // real jump() code
         if (this._firstJump && this._secondJump) {
             return;
         }
@@ -203,10 +206,14 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
             this._secondJump = true;
             performJump();
         }
-        */
+        // */
     }
     private _firstJump: boolean;
     private _secondJump: boolean;
+    resetJumpState(): void {
+        this._firstJump = false;
+        this._secondJump = false;
+    }
 
     // shield
     shield(): void { }
@@ -233,10 +240,21 @@ export class Player implements ObjectWithMeshEntity, Creature, Ticker {
     teleportToPreviousPortal(): void { }
     teleportToNextPortal(): void { }
 
+    registerEventHandler(): void {
+        EventDispatcher.getInstance().addEventHandler(EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
+    }
+
     // event handler
     private onCollideWithMonster: EventHandler;
-    private onCollideWithNormalMapBlock: EventHandler;
-    private onCollideWithSpecialMapBlock: EventHandler;
+    static getFnOnCollideWithNormalMapBlock(object: any) {
+        return (eventType: EventType, eventMessage: EventMessage) => {
+            console.log("Event handler Mapblock collide with player")
+            if (object != SceneController.getInstance().player) return;
+
+            <Player>object.resetJumpState();
+        }
+    }
+    // private onCollideWithSpecialMapBlock: EventHandler;
     private onCollideWithItem: EventHandler;
     private onCollideWithSoulball: EventHandler;
     private onCollideWithTeleportPoint: EventHandler;

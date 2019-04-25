@@ -33,12 +33,18 @@ export class Bullet implements EventSubscriber {
     animate(): void { }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, this.onCollideWithEnemy);
+        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, Bullet.getFnOnCollideWithEnemy(this));
     }
 
-    private onCollideWithEnemy(eventType: EventType, eventMessage: EventMessage): void {
-        if (eventMessage.object.bullet.id == this._id) {
-            this._mesh.dispose();
+    static getFnOnCollideWithEnemy(object: any) {
+        return (eventType: EventType, eventMessage: EventMessage) => {
+            if (object == undefined) return;
+            if (eventMessage.object.bullet.id == object.id) {
+                // object.mesh.dispose();
+                setTimeout(() => {
+                    <Bullet>object.mesh.dispose(); // might have some post-error
+                }, 100);
+            }
         }
     }
 }
@@ -93,12 +99,16 @@ export class BulletFactory implements EventPublisher, EventSubscriber {
     }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, this.onBulletCollideWithEnemy);
+        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, BulletFactory.getFnOnBulletCollideWithEnemy(this));
     }
 
-    private onBulletCollideWithEnemy(eventType: EventType, eventMessage: EventMessage) {
-        console.log(eventType, eventMessage);
-
-        this.destroyBulletById(eventMessage.object.enemy.id);
+    static getFnOnBulletCollideWithEnemy(object: any): EventHandler {
+        return function (eventType: EventType, eventMessage: EventMessage) {
+            console.log(eventType, eventMessage);
+            let bulletId = eventMessage.object.bullet.id;
+            setTimeout(() => {
+                object.destroyBulletById(bulletId);
+            }, 120);
+        }
     }
 }

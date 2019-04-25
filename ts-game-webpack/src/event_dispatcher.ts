@@ -27,7 +27,6 @@ export class EventDispatcher {
     private eventHandlers: Map<EventType, Array<EventHandler>>;
 
     private searchEventType(eventType: EventType): boolean {
-        console.log(this.eventHandlers.get(eventType));
         return !(this.eventHandlers.get(eventType) == undefined);
     }
     private dispatchEvent(eventType: EventType, eventMessage: EventMessage) {

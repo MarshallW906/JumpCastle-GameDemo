@@ -71,15 +71,17 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPubli
         // collide with special map block? (optional....)
     }
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, this.onCollideWithBullets);
+        EventDispatcher.getInstance().addEventHandler(EventType.BulletCollideWithEnemy, Enemy.getFnOnCollideWithBullets(this));
         // EventDispatcher.getInstance().addEventHandler
     }
 
     // event handler
-    private onCollideWithBullets(eventType: EventType, eventMessage: EventMessage) {
-        if (this._id == eventMessage.object.enemy.id) {
-            this.subtractHP(eventMessage.object.bullet.damage);
-            // check if self is dead (HP <= 0)
+    static getFnOnCollideWithBullets(object: any): EventHandler {
+        return (eventType: EventType, eventMessage: EventMessage) => {
+            if (<Enemy>object.id == eventMessage.object.enemy.id) {
+                <Enemy>object.subtractHP(eventMessage.object.bullet.damage);
+                // check if object is dead (HP <= 0)
+            }
         }
     }
     // private onCollideWithSpecialMapBlock: EventHandler;

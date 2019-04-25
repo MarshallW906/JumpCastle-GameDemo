@@ -1,7 +1,7 @@
 import * as Babylon from "@babylonjs/core";
 import * as _ from "lodash";
 
-import { ItemType, ItemInfo, EventSubscriber, EventPublisher, EventMessage, EventHandler, EventType } from './types';
+import { ItemType, ItemInfo, EventSubscriber, EventPublisher, EventMessage, EventType } from './types';
 import { SceneController } from "./scene";
 import { EventDispatcher } from "./event_dispatcher";
 
@@ -15,6 +15,7 @@ export class Item implements EventPublisher, EventSubscriber {
     private _price: number = 0;
 
     private _mesh: Babylon.Mesh;
+    get mesh(): Babylon.Mesh { return this._mesh; }
 
     constructor(id: number, name: string, location: Babylon.Vector3, itemInfo: ItemInfo) {
         this._id = id;
@@ -34,12 +35,10 @@ export class Item implements EventPublisher, EventSubscriber {
         }
         this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
         this._mesh.position = location;
-        this._mesh.collisionMask
         // set color ...
     }
 
     initEventDetector(): void {
-        let player = SceneController.getInstance().player;
         let that = this;
         this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
         this._mesh.actionManager.registerAction(
@@ -62,14 +61,19 @@ export class Item implements EventPublisher, EventSubscriber {
     }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, this.onCollisionWithPlayer);
+        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, Item.getFnOnCollisionWithPlayer(this));
     }
 
-    private onCollisionWithPlayer(eventType: EventType, eventMessage: EventMessage) {
-        console.log(eventType, eventMessage);
-
-        // self remove
-        this._mesh.dispose();
+    static getFnOnCollisionWithPlayer(object: any) {
+        return function (eventType: EventType, eventMessage: EventMessage) {
+            if (object == undefined) return;
+            if (object == eventMessage.object) {
+                // <Item>object.mesh.dispose();
+                setTimeout(() => {
+                    <Item>object.mesh.dispose(); // might have some post-error
+                }, 100);
+            }
+        }
     }
 }
 
@@ -77,10 +81,6 @@ export class ItemFactory implements EventSubscriber {
     private _items: Array<Item>;
 
     constructor() {
-        this.init();
-    }
-
-    init(): void {
         this._items = new Array<Item>();
     }
 
@@ -107,10 +107,14 @@ export class ItemFactory implements EventSubscriber {
 
     // interface EventSubscriber
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, this.onItemCollideWithPlayer);
+        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, ItemFactory.getFnOnItemCollideWithPlayer(this));
     }
 
-    private onItemCollideWithPlayer(eventType: EventType, eventMessage: EventMessage): void {
-        this.destroyItem(eventMessage.object.id);
+    static getFnOnItemCollideWithPlayer(object: any) {
+        return (eventType: EventType, eventMessage: EventMessage) => {
+            if (object == undefined) return;
+            <ItemFactory>object.destroyItem(eventMessage.object.id);
+        }
     }
+
 }

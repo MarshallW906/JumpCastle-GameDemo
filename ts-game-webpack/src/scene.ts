@@ -120,7 +120,7 @@ export class SceneController {
     initMap(): void {
         this._gameMap = new GameMap();
         this._gameMap.initMap();
-        this._gameMap.test();
+        // this._gameMap.test();
     }
 
     initEnemy(): void {
@@ -143,5 +143,9 @@ export class SceneController {
 
         this._eventDispatcher.test();
         this._eventDispatcher.registerEventType(EventType.ItemCollideWithPlayer);
+        this._eventDispatcher.registerEventType(EventType.BulletCollideWithEnemy);
+        this._eventDispatcher.registerEventType(EventType.EnemyCollideWithPlayer);
+        this._eventDispatcher.registerEventType(EventType.MapBlockCollideWithPlayer);
+
     }
 }
