@@ -57,7 +57,11 @@ export class MapBlock implements EventPublisher {
         }
     }
 
-    destroy: NoReturnValFunc;
+    destroyMesh(): void {
+        if (this._mesh !== undefined) {
+            this._mesh.dispose();
+        }
+    };
 
     // other attributes
     private _type: number; // Plain, Trap, Modifier, (or combination of these types, use |(or) )

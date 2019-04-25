@@ -79,7 +79,7 @@ export interface Creature {
  */
 export interface ObjectWithMeshEntity {
     initMesh: NoReturnValFunc;
-    destroy: NoReturnValFunc;
+    destroyMesh: NoReturnValFunc;
 }
 
 /**
@@ -117,6 +117,7 @@ export interface MapBlockSize {
     height: number,
     depth: number
 }
+export type EnemySize = MapBlockSize;
 
 export interface MapBlockAttributes {
     /**

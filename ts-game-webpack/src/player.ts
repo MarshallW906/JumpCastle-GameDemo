@@ -65,7 +65,11 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             that.playerMesh.physicsImpostor.setAngularVelocity(Babylon.Vector3.Zero());
         })
     }
-    destroy: MyTypes.NoReturnValFunc;
+    destroyMesh(): void {
+        if (this._playerMesh !== undefined) {
+            this._playerMesh.dispose();
+        }
+    }
 
     private keyMapStates: Map<string, boolean>;
     private registerKeyboardActions(): void {

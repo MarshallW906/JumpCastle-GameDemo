@@ -64,7 +64,7 @@ export class Bullet implements MyTypes.EventSubscriber {
             if (eventMessage.object.bullet.id == object.id) {
                 // object.mesh.dispose();
                 setTimeout(() => {
-                    <Bullet>object.mesh.dispose(); // might have some post-error
+                    (<Bullet>object).mesh.dispose(); // might have some post-error
                 }, 100);
             }
         }

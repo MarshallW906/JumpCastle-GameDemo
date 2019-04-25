@@ -70,7 +70,7 @@ export class Item implements EventPublisher, EventSubscriber {
             if (object == eventMessage.object) {
                 // <Item>object.mesh.dispose();
                 setTimeout(() => {
-                    <Item>object.mesh.dispose(); // might have some post-error
+                    (<Item>object).mesh.dispose(); // might have some post-error
                 }, 100);
             }
         }

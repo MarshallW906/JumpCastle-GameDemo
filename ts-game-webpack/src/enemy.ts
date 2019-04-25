@@ -4,15 +4,15 @@ import { Creature, QuantityChangeFunc, QuantityChangeFuncNoOp, NoReturnValFunc, 
 import { SceneController } from "./scene";
 import { EventDispatcher } from "./event_dispatcher";
 
-export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPublisher, EventSubscriber {
+export class Enemy implements Creature, Ticker, EventPublisher, EventSubscriber {
     // interface Ticker
     tick_interval: number;
     tick: NoReturnValFunc;
 
     // interface Creature
     HP: number;
-    addHP: QuantityChangeFunc;
-    subtractHP: QuantityChangeFunc;
+    addHP(quantity: number): void { this.HP += quantity; }
+    subtractHP(quantity: number): void { this.HP -= quantity }
 
     SP: number = 0;
     SPRecoverSpeed: number = 0;
@@ -20,32 +20,47 @@ export class Enemy implements ObjectWithMeshEntity, Creature, Ticker, EventPubli
     subtractSP: QuantityChangeFunc = QuantityChangeFuncNoOp;
 
     moveSpeed: number;
-    addMoveSpeed: QuantityChangeFunc;
-    subtractMoveSpeed: QuantityChangeFunc;
+    addMoveSpeed(quantity: number): void { this.moveSpeed += quantity; }
+    subtractMoveSpeed(quantity: number): void { this.moveSpeed -= quantity; }
 
     attackDamage: number;
-    addAttackDamage: QuantityChangeFunc;
-    subtractAttackDamage: QuantityChangeFunc;
+    addAttackDamage(quantity: number): void { this.attackDamage += quantity; }
+    subtractAttackDamage(quantity: number): void { this.attackDamage -= quantity; }
     attack: NoReturnValFunc = NoReturnValFuncNoOp;
+
+    constructor(id: number, name: string, location: Babylon.Vector3) {
+        this._id = id;
+        this._name = name;
+
+        this.initProperties();
+        this.initMesh(location);
+    }
 
     initProperties(): void {
         this.HP = 100;
-        this.SP = 0;
         this.moveSpeed = 0.1;
         this.attackDamage = 5;
     }
 
+    private _id: number;
+    get id(): number { return this._id; }
+    private _name: string;
     private _mesh: Babylon.Mesh;
     get mesh(): Babylon.Mesh { return this._mesh; }
     // interface ObjectWithMeshEntity
-    initMesh: NoReturnValFunc;
-    destroy: NoReturnValFunc;
+    initMesh(location: Babylon.Vector3): void {
+        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, {}, SceneController.getInstance().gameScene);
+        this._mesh.position = location;
+    }
 
+    destroyMesh(): void {
+        if (this._mesh !== undefined) {
+            this._mesh.dispose();
+        }
+    }
 
     // --------------------
     // Enemy
-    private _id: number;
-    get id(): number { return this._id; }
     gold: number;
     // dropGold()?
     items: ItemCollection;
