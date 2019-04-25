@@ -73,7 +73,9 @@ export class BulletFactory implements EventPublisher, EventSubscriber {
         SceneController.getInstance().gameScene.registerBeforeRender(() => {
             let enemies = SceneController.getInstance().enemyFactory.enemies;
             this._bullets.forEach((bullet: Bullet) => {
+                if (bullet == undefined) return;
                 enemies.every((enemy) => {
+                    if (enemy == undefined) return true;
                     if (bullet.mesh.intersectsMesh(enemy.mesh)) {
                         EventDispatcher.getInstance().receiveEvent(EventType.BulletCollideWithEnemy, {
                             object: {
@@ -84,6 +86,7 @@ export class BulletFactory implements EventPublisher, EventSubscriber {
                         });
                         return false;
                     }
+                    return true;
                 });
             });
         });
