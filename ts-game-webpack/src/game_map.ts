@@ -6,23 +6,23 @@ import * as _ from "lodash";
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
 import { SceneController } from "./scene";
-import { NoReturnValFunc, MapBlockType, MapBlockSize, MapBlockAttributes, MapBlockInfo, EventPublisher, EventType } from "./types";
+import * as MyTypes from "./types";
 import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
 
-export class MapBlock implements EventPublisher {
+export class MapBlock implements MyTypes.EventPublisher {
     /**
      * 
      * @param id 
      * @param name 
      * @param mapBlockInfo 
      */
-    constructor(id: number, name: string, mapBlockInfo: MapBlockInfo) {
+    constructor(id: number, name: string, mapBlockInfo: MyTypes.MapBlockInfo) {
         this._id = id;
         this._name = name;
         this._type = mapBlockInfo.type;
         this.initMesh({ width: mapBlockInfo.length, height: 0.2, depth: 10 }, mapBlockInfo.location);
-        if (mapBlockInfo.type & MapBlockType.Plain) {
+        if (mapBlockInfo.type & MyTypes.MapBlockType.Plain) {
             this.initAttributes(mapBlockInfo.attributes);
         }
         this.initEventDetector();
@@ -38,7 +38,7 @@ export class MapBlock implements EventPublisher {
     // interface ObjectWithMeshEntity
     // now initMesh might need some params, so this interface might be changed
 
-    initMesh(size: MapBlockSize, location: Babylon.Vector3): void {
+    initMesh(size: MyTypes.MapBlockSize, location: Babylon.Vector3): void {
         if (location.z != 0) {
             throw Error("MapBlock location.z is not 0 !");
         }
@@ -47,12 +47,12 @@ export class MapBlock implements EventPublisher {
         this._mesh.physicsImpostor = new Babylon.PhysicsImpostor(this._mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, gameScene);
         this._mesh.position = location;
 
-        if (this._type == MapBlockType.Plain) return;
+        if (this._type == MyTypes.MapBlockType.Plain) return;
 
-        if (this._type & MapBlockType.Trap) {
+        if (this._type & MyTypes.MapBlockType.Trap) {
             console.log(this._name, "is also a Trap. Currently not implemented yet..");
         }
-        if (this._type & MapBlockType.Modifier) {
+        if (this._type & MyTypes.MapBlockType.Modifier) {
             console.log(this._name, "is also a Trap. Currently not implemented yet..");
         }
     }
@@ -68,11 +68,11 @@ export class MapBlock implements EventPublisher {
     private _damage: number;
     private _modifiers: Array<Buff>;
 
-    initAttributes(blockAttributes: MapBlockAttributes): void {
-        if (this._type & MapBlockType.Trap) {
+    initAttributes(blockAttributes: MyTypes.MapBlockAttributes): void {
+        if (this._type & MyTypes.MapBlockType.Trap) {
             this._damage = blockAttributes.damagePerSecond;
         }
-        if (this._type & MapBlockType.Modifier) {
+        if (this._type & MyTypes.MapBlockType.Modifier) {
             this._modifiers = blockAttributes.buffs;
         }
     }
@@ -89,8 +89,7 @@ export class MapBlock implements EventPublisher {
                 }
             }, (evt: Babylon.ActionEvent) => {
                 console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
-                console.log(evt);
-                EventDispatcher.getInstance().receiveEvent(EventType.MapBlockCollideWithPlayer, {
+                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.MapBlockCollideWithPlayer, {
                     object: that,
                     message: "MapBlock Collide With Player"
                 });
@@ -103,9 +102,9 @@ export class MapBlock implements EventPublisher {
     /**
      * the return type is a MapBlockInfo (interface)
      */
-    static getPlainMapBlockInfo(length: number, location: Babylon.Vector3): MapBlockInfo {
+    static getPlainMapBlockInfo(length: number, location: Babylon.Vector3): MyTypes.MapBlockInfo {
         return {
-            type: MapBlockType.Plain,
+            type: MyTypes.MapBlockType.Plain,
             length: length,
             location: location,
             attributes: {}
@@ -120,31 +119,30 @@ export class MapBlock implements EventPublisher {
 export class GameMap {
     private _gameScene = SceneController.getInstance().gameScene;
     private _mapBlockList: Array<MapBlock>;
-    private _mapInfo: Array<MapBlockInfo>;
+    private _mapInfo: Array<MyTypes.MapBlockInfo>;
 
     constructor() {
         this._mapBlockList = new Array<MapBlock>();
-        this._mapInfo = new Array<MapBlockInfo>();
+        this._mapInfo = new Array<MyTypes.MapBlockInfo>();
     }
 
     private initMapInfo(): void {
-        // console.log(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, Babylon.Vector3.Zero()));
     };
 
-    private createNewMapBlock(mapBlockInfo: MapBlockInfo): void {
+    private createNewMapBlock(mapBlockInfo: MyTypes.MapBlockInfo): void {
         console.log(mapBlockInfo);
         let blockTypeNameArray = new Array<string>();
         blockTypeNameArray.push("MapBlock");
 
-        if (mapBlockInfo.type == MapBlockType.Plain) {
+        if (mapBlockInfo.type == MyTypes.MapBlockType.Plain) {
             blockTypeNameArray.push("Plain");
         } else {
-            if (mapBlockInfo.type | MapBlockType.Trap) {
+            if (mapBlockInfo.type | MyTypes.MapBlockType.Trap) {
                 blockTypeNameArray.push("Trap");
             }
-            if (mapBlockInfo.type | MapBlockType.Modifier) {
+            if (mapBlockInfo.type | MyTypes.MapBlockType.Modifier) {
                 blockTypeNameArray.push("Modifier");
             }
         }
@@ -155,7 +153,7 @@ export class GameMap {
     }
 
     private initCurrentMapBlocks(): void {
-        this._mapInfo.forEach((mapBlockInfo: MapBlockInfo) => {
+        this._mapInfo.forEach((mapBlockInfo: MyTypes.MapBlockInfo) => {
             this.createNewMapBlock(mapBlockInfo);
         })
     }

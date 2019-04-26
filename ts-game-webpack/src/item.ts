@@ -1,23 +1,25 @@
 import * as Babylon from "@babylonjs/core";
 import * as _ from "lodash";
 
-import { ItemType, ItemInfo, EventSubscriber, EventPublisher, EventMessage, EventType } from './types';
+import * as MyTypes from './types';
 import { SceneController } from "./scene";
 import { EventDispatcher } from "./event_dispatcher";
 
-export class Item implements EventPublisher, EventSubscriber {
+export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
     private _id: number;
     get id(): number { return this._id; }
     private _name: string;
-    private _type: ItemType;
-    get type(): ItemType { return this._type; }
+    private _type: MyTypes.ItemType;
+    get type(): MyTypes.ItemType { return this._type; }
     private _quantity: number;
+    get quantity(): number { return this._quantity; }
     private _price: number = 0;
+    get price(): number { return this._price; }
 
     private _mesh: Babylon.Mesh;
     get mesh(): Babylon.Mesh { return this._mesh; }
 
-    constructor(id: number, name: string, location: Babylon.Vector3, itemInfo: ItemInfo) {
+    constructor(id: number, name: string, location: Babylon.Vector3, itemInfo: MyTypes.ItemInfo) {
         this._id = id;
         this._name = name;
         this._type = itemInfo.type;
@@ -50,8 +52,8 @@ export class Item implements EventPublisher, EventSubscriber {
                 }
             }, (evt: Babylon.ActionEvent) => {
                 console.log("item collide with Player, OnIntersectionEnterTrigger");
-                console.log(evt);
-                EventDispatcher.getInstance().receiveEvent(EventType.ItemCollideWithPlayer, {
+                // console.log(evt);
+                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.ItemCollideWithPlayer, {
                     object: that,
                     message: "Item Collide With Player"
                 });
@@ -61,23 +63,27 @@ export class Item implements EventPublisher, EventSubscriber {
     }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, Item.getFnOnCollisionWithPlayer(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Item.getFnOnCollisionWithPlayer(this));
     }
 
-    static getFnOnCollisionWithPlayer(object: any) {
-        return function (eventType: EventType, eventMessage: EventMessage) {
-            if (object == undefined) return;
-            if (object == eventMessage.object) {
-                // <Item>object.mesh.dispose();
-                setTimeout(() => {
-                    (<Item>object).mesh.dispose(); // might have some post-error
-                }, 100);
+    static getFnOnCollisionWithPlayer(item: Item) {
+        return function (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) {
+            if (item == undefined) return;
+            if (item == eventMessage.object) {
+                if (item._price == 0) {
+                    setTimeout(() => {
+                        (<Item>item).mesh.dispose(); // might have some post-error
+                    }, 100);
+                } else {
+                    // needs to be purchased
+                    // ...
+                }
             }
         }
     }
 }
 
-export class ItemFactory implements EventSubscriber {
+export class ItemFactory implements MyTypes.EventSubscriber {
     private _items: Array<Item>;
 
     constructor() {
@@ -86,13 +92,13 @@ export class ItemFactory implements EventSubscriber {
 
     test(): void {
         this.createNewItem({
-            type: ItemType.SoulBall,
+            type: MyTypes.ItemType.SoulBall,
             quantity: 10,
             price: 0
         }, new Babylon.Vector3(15, 7, 0));
     }
 
-    createNewItem(itemInfo: ItemInfo, location: Babylon.Vector3): void {
+    createNewItem(itemInfo: MyTypes.ItemInfo, location: Babylon.Vector3): void {
         let newItemName = _.join(["Item", itemInfo.type, this._items.length.toString()], '-');
         this._items.push(new Item(this._items.length, newItemName, location, itemInfo));
     }
@@ -101,17 +107,17 @@ export class ItemFactory implements EventSubscriber {
      * This sets the _items[itemId] to undefined. So the index incrementation will not be affected.
      * @param itemId item's index in _item
      */
-    destroyItem(itemId: number): void {
+    removeItemById(itemId: number): void {
         delete this._items[itemId];
     }
 
     // interface EventSubscriber
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(EventType.ItemCollideWithPlayer, ItemFactory.getFnOnItemCollideWithPlayer(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, ItemFactory.getFnOnItemCollideWithPlayer(this));
     }
 
     static getFnOnItemCollideWithPlayer(object: any) {
-        return (eventType: EventType, eventMessage: EventMessage) => {
+        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (object == undefined) return;
             <ItemFactory>object.destroyItem(eventMessage.object.id);
         }

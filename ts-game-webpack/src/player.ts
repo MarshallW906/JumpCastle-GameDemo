@@ -7,6 +7,7 @@ import * as MyTypes from './types'
 import { SceneController } from './scene';
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
+import { Item } from "./item";
 
 
 export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, MyTypes.Ticker, MyTypes.EventSubscriber {
@@ -42,7 +43,9 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this.SP = 100;
         this.SPRecoverSpeed = 0;
         this.moveSpeed = 0.3;
-        this.attackDamage = 5;
+        this.attackDamage = 30;
+        this.gold = 0;
+        this.soul = 0;
     }
 
     // interface ObjectWithMeshEntity
@@ -259,36 +262,66 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyDead, Player.getFnOnEnemyDead(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Player.getFnOnCollideWithItem(this));
     }
 
     // event handler
-    static getFnOnCollideWithEnemy(object: any): MyTypes.EventHandler {
+    static getFnOnCollideWithEnemy(player: Player): MyTypes.EventHandler {
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            if (object != SceneController.getInstance().player) return;
+            if (player != SceneController.getInstance().player) return;
 
-            (<Player>object).subtractHP((<Enemy>eventMessage.object).attackDamage);
-        });
-    }
-    static getFnOnCollideWithNormalMapBlock(object: any) {
-        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            console.log("Event handler Mapblock collide with player")
-            if (object != SceneController.getInstance().player) return;
-
-            (<Player>object).resetJumpState();
-        }
-    }
-    // private onCollideWithSpecialMapBlock: EventHandler;
-    static getFnOnCollideWithItem(object: any): MyTypes.EventHandler {
-        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            if (object != SceneController.getInstance().player) return;
-
-            // (<Player>object)
+            player.subtractHP((<Enemy>eventMessage.object).attackDamage);
+            console.log("Player current HP:", player.HP);
         });
     }
 
-    static getFnOnCollideWithTeleportPoint(object: any): MyTypes.EventHandler {
+    static getFnOnCollideWithNormalMapBlock(player: Player) {
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            if (object != SceneController.getInstance().player) return;
+            console.log("Event handler from player: Mapblock collide with player")
+            if (player != SceneController.getInstance().player) return;
+
+            player.resetJumpState();
+        })
+    }
+
+    static getFnOnCollideWithItem(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+            let item = <Item>(eventMessage.object);
+            switch (item.type) {
+                case MyTypes.ItemType.HPRecovery:
+                    player.addHP(item.quantity);
+                    console.log("current Player HP,", player.HP);
+                    break;
+                case MyTypes.ItemType.SPRecovery:
+                    player.addSP(item.quantity);
+                    console.log("current Player SP,", player.SP);
+                    break;
+                case MyTypes.ItemType.SoulBall:
+                    player.addSoul(item.quantity);
+                    console.log("current Player Soul", player.soul);
+                    break;
+            }
+
+        });
+    }
+
+    static getFnOnEnemyDead(player: Player) {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+            player.gold += eventMessage.object.gold;
+            console.log("player current gold", player.gold);
+            // player.items, concat with eventMessage.object.items
+        })
+    }
+
+    static getFnOnCollideWithTeleportPoint(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
 
             // (<Player>object)
         })

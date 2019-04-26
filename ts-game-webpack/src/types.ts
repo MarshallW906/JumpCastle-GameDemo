@@ -1,7 +1,6 @@
 import { Vector3 } from "@babylonjs/core";
 
 import { Buff } from "./buff";
-import { EventDispatcher } from "./event_dispatcher";
 
 // Types: Enum
 export enum EnemyType { }
@@ -25,6 +24,8 @@ export enum EventType {
     BulletCollideWithEnemy,
     EnemyCollideWithPlayer,
     MapBlockCollideWithPlayer,
+    EnemyDead,
+    GUIQuantityChange,
 }
 
 export type EventMessage = {

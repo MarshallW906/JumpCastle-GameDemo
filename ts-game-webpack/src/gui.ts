@@ -1,8 +1,9 @@
 import * as BabylonGUI from "@babylonjs/gui";
 import * as BABYLON from "@babylonjs/core";
 
-import { GUIMode, ItemCollection } from './types';
+import * as MyTypes from './types';
 import { SceneController } from "./scene";
+import { EventDispatcher } from "./event_dispatcher";
 
 /**
  * GUI may use another camera, which only captures the GUI elements.
@@ -10,7 +11,7 @@ import { SceneController } from "./scene";
  * Some warnings emerged when enable the panels.
  * needs checks.
  */
-export class GUIController {
+export class GUIController implements MyTypes.EventSubscriber {
     // -----------singleton-------------
     private static _instance: GUIController = new GUIController();
 
@@ -82,7 +83,7 @@ export class GUIController {
 
     Loading(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = GUIMode.Loading;
+        this.currentGUIMode = MyTypes.GUIMode.Loading;
 
         // display loading GUI
         // this.progressBarLoading.isVisible = true;
@@ -90,7 +91,7 @@ export class GUIController {
     }
     Title(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = GUIMode.Title;
+        this.currentGUIMode = MyTypes.GUIMode.Title;
 
         // display Title GUI
         this.logoGameTitle.isVisible = true;
@@ -99,7 +100,7 @@ export class GUIController {
     }
     GameRuntime(): void {
         this.hideCurrentGUI();
-        this.currentGUIMode = GUIMode.GameRuntime;
+        this.currentGUIMode = MyTypes.GUIMode.GameRuntime;
 
         // display GameRuntime GUI
         this.panelGameRuntime.isVisible = true;
@@ -107,7 +108,7 @@ export class GUIController {
     GameOver(): void {
         // no need to hideGUI()
         // this.hideCurrentGUI();
-        this.currentGUIMode = GUIMode.GameOver;
+        this.currentGUIMode = MyTypes.GUIMode.GameOver;
 
         // display GameOver GUI
         this.panelGameOver.isVisible = true;
@@ -117,7 +118,7 @@ export class GUIController {
     Win(): void {
         // no need to hideGUI()
         // this.hideCurrentGUI();
-        this.currentGUIMode = GUIMode.Win;
+        this.currentGUIMode = MyTypes.GUIMode.Win;
 
         // display Win GUI
         this.panelWin.isVisible = true;
@@ -160,12 +161,12 @@ export class GUIController {
 
     UpdateSoul(curSoul: number): void { }
 
-    UpdateItemList(curItemList: ItemCollection): void { }
+    UpdateItemList(curItemList: MyTypes.ItemCollection): void { }
 
     UpdateBuffList(curBuffList: any): void { }
 
     // Loading, Title, GameRuntime, GameOver, Win
-    private currentGUIMode: GUIMode = GUIMode.HideAll;
+    private currentGUIMode: MyTypes.GUIMode = MyTypes.GUIMode.HideAll;
     private hideCurrentGUI() {
         // hide all buttons, text labels, logos except ButtonMute(never needs to be hidden)
 
@@ -180,7 +181,7 @@ export class GUIController {
         this.buttonReturnToTitle.isVisible = false;
 
         // set currentGUIMode to "HideAll"
-        this.currentGUIMode = GUIMode.HideAll;
+        this.currentGUIMode = MyTypes.GUIMode.HideAll;
     }
 
     // GUI 
@@ -321,9 +322,9 @@ export class GUIController {
         this.panelGameRuntime = new BabylonGUI.StackPanel("GameRuntime");
         // this.panelWin.background = '';  background transparent, no filling color.
         // this.panelGameRuntime.width = '100%'; default to 100%.
-        this.panelGameRuntime.width = '90%';
-        this.panelGameRuntime.height = '90%';
-        this.panelGameRuntime.background = 'blue';
+        this.panelGameRuntime.width = '95%';
+        this.panelGameRuntime.height = '95%';
+        // this.panelGameRuntime.background = 'blue';
         this.panelGameRuntime.alpha = 0.5;
         this.panelGameRuntime.isVisible = true;
         this.panelGameRuntime.zIndex = -1;
@@ -346,6 +347,38 @@ export class GUIController {
         console.log('buttonReturnToTitle clicked');
         // return to title
     }
+
+    registerEventHandler(): void {
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GUIQuantityChange, GUIController.getFnOnGUIQuantityChange())
+    }
+
+    static getFnOnGUIQuantityChange(): MyTypes.EventHandler {
+        let guiController = GUIController.getInstance();
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            let HUDtoChange: string = eventMessage.message;
+            switch (HUDtoChange) {
+                case "HP":
+                    guiController.UpdateHPBar(eventMessage.object.HP);
+                    break;
+                case "SP":
+                    guiController.UpdateSPBar(eventMessage.object.SP);
+                    break;
+                case "Gold":
+                    guiController.UpdateGold(eventMessage.object.Gold);
+                    break;
+                case "Soul":
+                    guiController.UpdateSoul(eventMessage.object.Soul);
+                    break;
+                case "ItemList":
+                    guiController.UpdateItemList(eventMessage.object.HP);
+                    break;
+                case "BuffList":
+                    guiController.UpdateBuffList(eventMessage.object.itemList);
+                    break;
+            }
+        })
+    }
+
 }
 
 

@@ -109,6 +109,7 @@ export class SceneController {
         let guiController: GUIController = GUIController.getInstance();
         guiController.init();
         guiController.HideAll();
+        // guiController.GameRuntime();
         // for test
         guiController.TestGUI();
     }
@@ -127,6 +128,7 @@ export class SceneController {
 
     initEnemyFactory(): void {
         this._enemyFactory = new EnemyFactory();
+        this._enemyFactory.test();
     }
 
     initItem(): void {
@@ -148,6 +150,7 @@ export class SceneController {
         this._eventDispatcher.registerEventType(EventType.BulletCollideWithEnemy);
         this._eventDispatcher.registerEventType(EventType.EnemyCollideWithPlayer);
         this._eventDispatcher.registerEventType(EventType.MapBlockCollideWithPlayer);
-
+        this._eventDispatcher.registerEventType(EventType.EnemyDead);
+        this._eventDispatcher.registerEventType(EventType.GUIQuantityChange);
     }
 }
