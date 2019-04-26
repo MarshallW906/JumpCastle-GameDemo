@@ -18,13 +18,63 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
     // interface Creature
     HP: number
-    addHP(quantity: number): void { this.HP += quantity; }
-    subtractHP(quantity: number): void { this.HP -= quantity; }
+    _maxHP: number;
+    addHP(quantity: number): void {
+        this.HP += quantity;
+        if (this.HP > this._maxHP) {
+            this.HP = this._maxHP;
+        }
+    }
+    subtractHP(quantity: number): void {
+        this.HP -= quantity;
+        if (this.HP < 0) {
+            this.HP = 0;
+            this.onDead();
+        }
+    }
+
+    private _invincible: boolean;
+    private _invincibleTime: number;
+    getDamage(quantity: number): void {
+        if (this._invincible) return;
+        this.subtractHP(quantity);
+    }
+    // shield
+    private _shieldSPCost: number;
+    shield(): void {
+        if (this.SP < this._shieldSPCost) {
+            console.log("SP not enough!");
+            return;
+        }
+        let that = this;
+        this._invincible = true;
+        // generate some particles....
+        console.log("Player now becomes invincible for 2 seconds.")
+        setTimeout(() => {
+            that._invincible = false;
+            console.log("Player now gets back to vulnerable.")
+        }, this._invincibleTime);
+    }
 
     SP: number
     SPRecoverSpeed: number
-    addSP(quantity: number): void { this.SP += quantity; }
-    subtractSP(quantity: number): void { this.SP -= quantity; }
+    _maxSP: number;
+    addSP(quantity: number): void {
+        this.SP += quantity;
+        if (this.SP > this._maxSP) {
+            this.SP = this._maxSP;
+        }
+    }
+    subtractSP(quantity: number): void {
+        this.SP -= quantity;
+        if (this.SP < 0) this.SP = 0;
+    }
+
+    private _SPRecoverTimer: any;
+    private SPRecover(): void {
+        let that = this;
+        // this._SPRecoverTimer;
+    }
 
     moveSpeed: number
     addMoveSpeed(quantity: number): void { this.moveSpeed += quantity; }
@@ -40,12 +90,18 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     initProperties(): void {
-        this.HP = 100;
-        this.SP = 100;
+        this._maxHP = 100;
+        this._maxSP = 100;
+        this._invincible = false;
+        this._invincibleTime = 2000; // 2000 ms
+        this._shieldSPCost = 50;
+
+        this.HP = this._maxHP;
+        this.SP = this._maxSP;
         this.SPRecoverSpeed = 0;
         this.moveSpeed = 0.3;
         this.attackDamage = 30;
-        this.gold = 1000;
+        this.gold = 50;
         this.soul = 0;
 
         this._curTeleportPointId = undefined;
@@ -230,9 +286,6 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this._secondJump = false;
     }
 
-    // shield
-    shield(): void { }
-
     currentDirection: MyTypes.MoveDirection;
     /**
      * Currently Left means to add position.x, Right means to subtract position.x.
@@ -333,6 +386,10 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         }
     }
 
+    onDead(): void {
+        // now implemented
+    }
+
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
@@ -347,7 +404,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (player != SceneController.getInstance().player) return;
 
-            player.subtractHP((<Enemy>eventMessage.object).attackDamage);
+            player.getDamage((<Enemy>eventMessage.object).attackDamage);
             console.log("Player current HP:", player.HP);
         });
     }
