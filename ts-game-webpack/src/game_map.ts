@@ -174,3 +174,22 @@ export class GameMap {
         testground.position.y = 5;
     }
 }
+
+class MapBlockEdge {
+    constructor(id: number, name: string, location: Babylon.Vector3) {
+        this.initMesh(id, name, location);
+    }
+
+    _mesh: Babylon.Mesh;
+    get mesh(): Babylon.Mesh { return this._mesh; }
+
+    initMesh(id: number, name: string, location: Babylon.Vector3) {
+        this._mesh = Babylon.MeshBuilder.CreateBox(name, { width: 1, height: 0.5, depth: 10 }, SceneController.getInstance().gameScene);
+        this._mesh.isVisible = false;
+        this._mesh.position = location;
+    }
+
+    initEventDetector(): void {
+        // check colision with monsters
+    }
+}

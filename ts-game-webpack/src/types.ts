@@ -20,12 +20,16 @@ export function QuantityChangeFuncNoOp(quantity: number): void {
 
 // Event
 export enum EventType {
-    ItemCollideWithPlayer,
-    BulletCollideWithEnemy,
-    EnemyCollideWithPlayer,
-    MapBlockCollideWithPlayer,
-    EnemyDead,
     GUIQuantityChange,
+
+    ItemCollideWithPlayer,
+    MapBlockCollideWithPlayer,
+    BulletCollideWithEnemy,
+
+    EnemyDead,
+    EnemyCollideWithPlayer,
+    EnemyReachesMapBlockEdge,
+    EnemySeesPlayer,
 }
 
 export type EventMessage = {
