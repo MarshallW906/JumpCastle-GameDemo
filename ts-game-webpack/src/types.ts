@@ -25,7 +25,9 @@ export enum EventType {
     ItemCollideWithPlayer,
     MapBlockCollideWithPlayer,
     BulletCollideWithEnemy,
+
     PlayerEnterTeleportPoint,
+    PlayerExitTeleportPoint,
 
     EnemyDead,
     EnemyCollideWithPlayer,

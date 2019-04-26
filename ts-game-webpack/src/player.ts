@@ -8,6 +8,7 @@ import { SceneController } from './scene';
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
 import { Item } from "./item";
+import { TeleportPoint } from "./game_map";
 
 
 export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, MyTypes.Ticker, MyTypes.EventSubscriber {
@@ -46,6 +47,9 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this.attackDamage = 30;
         this.gold = 0;
         this.soul = 0;
+
+        this._curTeleportPointId = undefined;
+        this._canTeleport = false;
     }
 
     // interface ObjectWithMeshEntity
@@ -152,7 +156,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         });
     }
 
-    registerAfterRenderFuncs(): void {
+    registerBeforeRenderFuncs(): void {
         let that = this;
         this._gameScene.registerBeforeRender(() => {
             if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
@@ -173,7 +177,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this.initProperties();
         this.initMesh();
         this.registerKeyboardActions();
-        this.registerAfterRenderFuncs();
+        this.registerBeforeRenderFuncs();
         this.registerEventHandler();
     }
 
@@ -184,11 +188,6 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     addSoul(quantity: number): void { this.soul += quantity; }
 
     items: MyTypes.ItemCollection;
-
-    /**
-     * Record teleport points.
-     */
-    teleportPointsUnlocked: Array<boolean>;
 
     // jump
     jump(): void {
@@ -257,14 +256,53 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     // teleport
-    teleportToPreviousPortal(): void { }
-    teleportToNextPortal(): void { }
+    _canTeleport: boolean;
+    get canTeleport(): boolean { return this._canTeleport; }
+    _curTeleportPointId: number | undefined;
+
+    teleportToPreviousPortal(): void {
+        if (!this._canTeleport) return;
+        if (this._curTeleportPointId == undefined) return;
+
+        let teleportUnlocked = SceneController.getInstance().gameMap.teleportPointsUnlocked;
+        let nextTeleportId = this._curTeleportPointId;
+
+        for (let i = this._curTeleportPointId - 1; i >= 0; --i) {
+            if (teleportUnlocked[i]) {
+                nextTeleportId = i;
+                break;
+            }
+        }
+        if (nextTeleportId != this._curTeleportPointId) {
+            this._playerMesh.position = SceneController.getInstance().gameMap.teleportPoint[nextTeleportId].mesh.position;
+        }
+    }
+    teleportToNextPortal(): void {
+        if (!this._canTeleport) return;
+        if (this._curTeleportPointId == undefined) return;
+
+        let teleportUnlocked = SceneController.getInstance().gameMap.teleportPointsUnlocked;
+        let nextTeleportId = this._curTeleportPointId;
+
+        for (let i = this._curTeleportPointId + 1; i < teleportUnlocked.length; ++i) {
+            if (teleportUnlocked[i]) {
+                nextTeleportId = i;
+                break;
+            }
+        }
+
+        if (nextTeleportId != this._curTeleportPointId) {
+            this._playerMesh.position = SceneController.getInstance().gameMap.teleportPoint[nextTeleportId].mesh.position;
+        }
+    }
 
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyDead, Player.getFnOnEnemyDead(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Player.getFnOnCollideWithItem(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerEnterTeleportPoint, Player.getFnOnPlayerEnterTeleportPoint(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerExitTeleportPoint, Player.getFnOnPlayerExitTeleportPoint(this));
     }
 
     // event handler
@@ -319,11 +357,24 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         })
     }
 
-    static getFnOnCollideWithTeleportPoint(player: Player): MyTypes.EventHandler {
+    static getFnOnPlayerEnterTeleportPoint(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            console.log("Player. OnPlayerEnterTeleportPoint");
+            if (player != SceneController.getInstance().player) return;
+
+            player._canTeleport = true;
+            player._curTeleportPointId = (<TeleportPoint>eventMessage.object).id;
+            console.log("Player.canTeleport = true");
+        })
+    }
+
+    static getFnOnPlayerExitTeleportPoint(player: Player): MyTypes.EventHandler {
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (player != SceneController.getInstance().player) return;
 
-            // (<Player>object)
+            player._canTeleport = false;
+            player._curTeleportPointId = undefined;
+            console.log("Player.canTeleport = false");
         })
     }
 }
