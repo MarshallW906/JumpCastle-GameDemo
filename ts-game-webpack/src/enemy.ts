@@ -70,6 +70,10 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         this.move(this.currentDirection);
     }
 
+    animate2(): void {
+
+    }
+
     currentDirection: MyTypes.MoveDirection;
 
     move(direction: MyTypes.MoveDirection): void {
@@ -77,12 +81,10 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
             case MyTypes.MoveDirection.Left:
                 // move to left
                 this._mesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.WORLD);
-                this.currentDirection = MyTypes.MoveDirection.Left;
                 break;
             case MyTypes.MoveDirection.Right:
                 // move to right
                 this._mesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.WORLD);
-                this.currentDirection = MyTypes.MoveDirection.Right;
                 break;
         }
     }
@@ -115,7 +117,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
-                console.log("enemy collide with player");
+                // console.log("enemy collide with player");
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.EnemyCollideWithPlayer, {
                     object: that,
                     message: "Enemy collide with Player"
@@ -127,12 +129,11 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     }
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.BulletCollideWithEnemy, Enemy.getFnOnCollideWithBullets(this));
-        // EventDispatcher.getInstance().addEventHandler
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyReachesMapBlockEdge, Enemy.getFnOnReachesMapBlockEdge(this));
     }
 
     // event handler
-    static getFnOnCollideWithBullets(object: any): MyTypes.EventHandler {
-        let enemy = <Enemy>object;
+    static getFnOnCollideWithBullets(enemy: Enemy): MyTypes.EventHandler {
         return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (enemy == undefined) return;
 
@@ -144,6 +145,16 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
                     enemy.destroyMesh();
                     enemy.onDead();
                 }
+            }
+        }
+    }
+
+    static getFnOnReachesMapBlockEdge(enemy: Enemy): MyTypes.EventHandler {
+        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (enemy == undefined) return;
+            if (enemy.id == eventMessage.object.id) {
+                enemy.currentDirection = enemy.currentDirection == MyTypes.MoveDirection.Left ?
+                    MyTypes.MoveDirection.Right : MyTypes.MoveDirection.Left;
             }
         }
     }
@@ -183,7 +194,7 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
 
             enemyFactory.enemies.forEach((enemy) => {
                 if (enemy !== undefined) {
-                    // enemy.animate();
+                    enemy.animate();
                 }
             });
         }

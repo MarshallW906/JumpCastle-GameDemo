@@ -207,7 +207,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
                 }
             }
             that._playerMesh.physicsImpostor.setLinearVelocity(velocity);
-            console.log(that._playerMesh.physicsImpostor.getLinearVelocity());
+            // console.log(that._playerMesh.physicsImpostor.getLinearVelocity());
         }
 
         // performJump();

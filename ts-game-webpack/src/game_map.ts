@@ -9,8 +9,9 @@ import { SceneController } from "./scene";
 import * as MyTypes from "./types";
 import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
+import { Enemy } from "./enemy";
 
-export class MapBlock implements MyTypes.EventPublisher {
+class MapBlock implements MyTypes.EventPublisher {
     /**
      * 
      * @param id 
@@ -26,6 +27,13 @@ export class MapBlock implements MyTypes.EventPublisher {
             this.initAttributes(mapBlockInfo.attributes);
         }
         this.initEventDetector();
+
+        // create corresponding MapBlockEdge
+        let location = mapBlockInfo.location;
+        let mapBlockEdgeLeft: Babylon.Vector3 = new Babylon.Vector3(location.x + 0.5 * mapBlockInfo.length, location.y, location.z);
+        let mapBlockEdgeRight: Babylon.Vector3 = new Babylon.Vector3(location.x - 0.5 * mapBlockInfo.length, location.y, location.z);
+        SceneController.getInstance().mapBlockEdgeFactory.createNewMapBlockEdge(mapBlockEdgeLeft);
+        SceneController.getInstance().mapBlockEdgeFactory.createNewMapBlockEdge(mapBlockEdgeRight);
     }
 
     private _id: number;
@@ -132,7 +140,6 @@ export class GameMap {
     };
 
     private createNewMapBlock(mapBlockInfo: MyTypes.MapBlockInfo): void {
-        console.log(mapBlockInfo);
         let blockTypeNameArray = new Array<string>();
         blockTypeNameArray.push("MapBlock");
 
@@ -184,12 +191,45 @@ class MapBlockEdge {
     get mesh(): Babylon.Mesh { return this._mesh; }
 
     initMesh(id: number, name: string, location: Babylon.Vector3) {
-        this._mesh = Babylon.MeshBuilder.CreateBox(name, { width: 1, height: 0.5, depth: 10 }, SceneController.getInstance().gameScene);
+        this._mesh = Babylon.MeshBuilder.CreateBox(name, { width: 1, height: 3, depth: 10 }, SceneController.getInstance().gameScene);
         this._mesh.isVisible = false;
         this._mesh.position = location;
     }
+}
+
+export class MapBlockEdgeFactory implements MyTypes.EventPublisher {
+    private _blockEdges: Array<MapBlockEdge>;
+    get blockEdges(): Array<MapBlockEdge> { return this._blockEdges; }
+
+    constructor() {
+        this._blockEdges = new Array<MapBlockEdge>();
+
+        this.initEventDetector();
+    }
+
+    createNewMapBlockEdge(location: Babylon.Vector3) {
+        let id = this._blockEdges.length;
+        let name = _.join(['MapBlockEdge', id.toString()], '-');
+        this._blockEdges.push(new MapBlockEdge(id, name, location));
+    }
 
     initEventDetector(): void {
-        // check colision with monsters
+        let that = this;
+        SceneController.getInstance().gameScene.registerBeforeRender(() => {
+            let enemies = SceneController.getInstance().enemyFactory.enemies;
+            that._blockEdges.forEach((blockEdge: MapBlockEdge) => {
+                if (blockEdge == undefined) return;
+                enemies.forEach((enemy: Enemy) => {
+                    if (enemy == undefined) return;
+
+                    if (blockEdge.mesh.intersectsMesh(enemy.mesh)) {
+                        EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.EnemyReachesMapBlockEdge, {
+                            object: enemy,
+                            message: "An enemy reaches MapBlockEdge"
+                        })
+                    }
+                });
+            });
+        });
     }
 }

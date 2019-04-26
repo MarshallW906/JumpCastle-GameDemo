@@ -3,7 +3,7 @@ import * as Babylon from '@babylonjs/core';
 import { Player } from './player';
 import { GUIController } from './gui';
 import { EventDispatcher } from './event_dispatcher';
-import { GameMap } from './game_map';
+import { GameMap, MapBlockEdgeFactory } from './game_map';
 import { ItemFactory } from './item';
 import { BulletFactory } from './bullet';
 import { EventType } from './types';
@@ -37,6 +37,9 @@ export class SceneController {
     private _player: Player;
     get player(): Player { return this._player; }
     private _gameMap: GameMap;
+    get gameMap(): GameMap { return this._gameMap; }
+    private _mapBlockEdgeFactory: MapBlockEdgeFactory;
+    get mapBlockEdgeFactory(): MapBlockEdgeFactory { return this._mapBlockEdgeFactory; }
     private _itemFactory: ItemFactory;
     get itemFactory(): ItemFactory { return this._itemFactory; }
     private _bulletFactory: BulletFactory;
@@ -121,6 +124,8 @@ export class SceneController {
     }
 
     initMap(): void {
+        this._mapBlockEdgeFactory = new MapBlockEdgeFactory();
+
         this._gameMap = new GameMap();
         this._gameMap.initMap();
         // this._gameMap.test();
@@ -145,12 +150,17 @@ export class SceneController {
         this._eventDispatcher = EventDispatcher.getInstance();
         this._eventDispatcher.init();
 
-        this._eventDispatcher.test();
+        // this._eventDispatcher.test();
         this._eventDispatcher.registerEventType(EventType.ItemCollideWithPlayer);
         this._eventDispatcher.registerEventType(EventType.BulletCollideWithEnemy);
         this._eventDispatcher.registerEventType(EventType.EnemyCollideWithPlayer);
         this._eventDispatcher.registerEventType(EventType.MapBlockCollideWithPlayer);
+        this._eventDispatcher.registerEventType(EventType.PlayerEnterTeleportPoint);
+
         this._eventDispatcher.registerEventType(EventType.EnemyDead);
         this._eventDispatcher.registerEventType(EventType.GUIQuantityChange);
+        this._eventDispatcher.registerEventType(EventType.EnemyReachesMapBlockEdge);
+        this._eventDispatcher.registerEventType(EventType.EnemySeesPlayer);
+
     }
 }

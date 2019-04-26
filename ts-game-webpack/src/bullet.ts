@@ -153,7 +153,7 @@ export class BulletFactory implements MyTypes.EventPublisher, MyTypes.EventSubsc
 
     static getFnOnBulletCollideWithEnemy(object: any): MyTypes.EventHandler {
         return function (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) {
-            console.log(eventType, eventMessage);
+            // console.log(eventType, eventMessage);
             let bulletId = eventMessage.object.bullet.id;
             setTimeout(() => {
                 object.destroyBulletById(bulletId);
