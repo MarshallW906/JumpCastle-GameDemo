@@ -47,8 +47,10 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             return;
         }
         let that = this;
+        this.SP -= this._shieldSPCost;
         this._invincible = true;
         // generate some particles....
+        console.log("Player SP", this.SP);
         console.log("Player now becomes invincible for 2 seconds.")
         setTimeout(() => {
             that._invincible = false;
@@ -71,9 +73,12 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     private _SPRecoverTimer: any;
-    private SPRecover(): void {
+    private StartSPRecover(): void {
         let that = this;
-        // this._SPRecoverTimer;
+        this._SPRecoverTimer = setInterval(() => {
+            that.addSP(that.SPRecoverSpeed);
+            console.log("Player SP:", that.SP);
+        }, 1000);
     }
 
     moveSpeed: number
@@ -98,7 +103,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
         this.HP = this._maxHP;
         this.SP = this._maxSP;
-        this.SPRecoverSpeed = 0;
+        this.SPRecoverSpeed = 2;
         this.moveSpeed = 0.3;
         this.attackDamage = 30;
         this.gold = 50;
@@ -233,6 +238,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     init(): void {
         this.initProperties();
         this.initMesh();
+        this.StartSPRecover();
         this.registerKeyboardActions();
         this.registerBeforeRenderFuncs();
         this.registerEventHandler();
@@ -250,18 +256,21 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         function performJump(): void {
             let velocity: Babylon.Vector3 = new Babylon.Vector3(0, 7, 0);
             if (that.keyMapStates.get('W') || that.keyMapStates.get('w')) {
-                velocity.y += 3; // 10
+                velocity.y += 5; // 10
             }
-            if (that.keyMapStates.get('S') || that.keyMapStates.get('s')) {
-                if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
-                    velocity.x += 3;
-                }
-                if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
-                    velocity.x += -3;
-                }
-            }
+
             that._playerMesh.physicsImpostor.setLinearVelocity(velocity);
             // console.log(that._playerMesh.physicsImpostor.getLinearVelocity());
+            if (that.keyMapStates.get('S') || that.keyMapStates.get('s')) {
+                if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
+                    // velocity.x += 3;
+                    that.playerMesh.physicsImpostor.applyImpulse(new Babylon.Vector3(10, 0, 0), that.playerMesh.getAbsolutePosition())
+                }
+                if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
+                    // velocity.x += -3;
+                    that.playerMesh.physicsImpostor.applyImpulse(new Babylon.Vector3(-10, 0, 0), that.playerMesh.getAbsolutePosition())
+                }
+            }
         }
 
         // performJump();
@@ -293,6 +302,13 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
      * @param direction 
      */
     move(direction: MyTypes.MoveDirection): void {
+        // reset linear velocity at x-axis
+        if (direction != this.currentDirection) {
+            let linearVelocity = this._playerMesh.physicsImpostor.getLinearVelocity();
+            linearVelocity.x = 0;
+            this._playerMesh.physicsImpostor.setLinearVelocity(linearVelocity);
+        }
+
         switch (direction) {
             case MyTypes.MoveDirection.Left:
                 // move to left
@@ -415,6 +431,9 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             if (player != SceneController.getInstance().player) return;
 
             player.resetJumpState();
+            let linearVelocity = player.playerMesh.physicsImpostor.getLinearVelocity();
+            linearVelocity.x = 0;
+            player.playerMesh.physicsImpostor.setLinearVelocity(linearVelocity);
         })
     }
 
