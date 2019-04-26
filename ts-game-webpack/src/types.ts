@@ -23,6 +23,9 @@ export enum EventType {
     GUIQuantityChange,
 
     ItemCollideWithPlayer,
+    PlayerLeaveAnItem,
+    ItemBePurchased,
+
     MapBlockCollideWithPlayer,
     BulletCollideWithEnemy,
 

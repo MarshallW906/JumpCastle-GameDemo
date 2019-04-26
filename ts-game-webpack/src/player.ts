@@ -45,7 +45,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this.SPRecoverSpeed = 0;
         this.moveSpeed = 0.3;
         this.attackDamage = 30;
-        this.gold = 0;
+        this.gold = 1000;
         this.soul = 0;
 
         this._curTeleportPointId = undefined;
@@ -143,6 +143,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         createKeyUpAction('F', (evt: any) => {
             console.log('F/f was pressed. Purchase Item.');
             // purchase Item
+            that.purchaseItem();
         });
 
         // R/T: move to previous/next teleport point (if applicable)
@@ -186,8 +187,6 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
     soul: number;
     addSoul(quantity: number): void { this.soul += quantity; }
-
-    items: MyTypes.ItemCollection;
 
     // jump
     jump(): void {
@@ -296,6 +295,44 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         }
     }
 
+    items: MyTypes.ItemCollection;
+    currentPickedItem: Item | undefined;
+    getItem(item: Item) {
+        switch (item.type) {
+            case MyTypes.ItemType.HPRecovery:
+                this.addHP(item.quantity);
+                console.log("current Player HP,", this.HP);
+                break;
+            case MyTypes.ItemType.SPRecovery:
+                this.addSP(item.quantity);
+                console.log("current Player SP,", this.SP);
+                break;
+            case MyTypes.ItemType.SoulBall:
+                this.addSoul(item.quantity);
+                console.log("current Player Soul", this.soul);
+                break;
+        }
+    }
+    purchaseItem(): void {
+        if (this.currentPickedItem == undefined) return;
+
+        if (this.currentPickedItem.price <= this.gold) {
+            this.gold -= this.currentPickedItem.price;
+            console.log(this.gold);
+
+            this.getItem(this.currentPickedItem);
+
+            EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.ItemBePurchased, {
+                object: this.currentPickedItem,
+                message: "An item is purchased."
+            })
+
+            this.currentPickedItem = undefined;
+        } else {
+            console.log("Gold not enough.");
+        }
+    }
+
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
@@ -329,21 +366,20 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             if (player != SceneController.getInstance().player) return;
 
             let item = <Item>(eventMessage.object);
-            switch (item.type) {
-                case MyTypes.ItemType.HPRecovery:
-                    player.addHP(item.quantity);
-                    console.log("current Player HP,", player.HP);
-                    break;
-                case MyTypes.ItemType.SPRecovery:
-                    player.addSP(item.quantity);
-                    console.log("current Player SP,", player.SP);
-                    break;
-                case MyTypes.ItemType.SoulBall:
-                    player.addSoul(item.quantity);
-                    console.log("current Player Soul", player.soul);
-                    break;
+            if (item.price == 0) {
+                player.getItem(item);
+            } else { // item with a price
+                player.currentPickedItem = item;
             }
 
+        });
+    }
+
+    static getFnOnLeaveAnItem(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+            player.currentPickedItem = undefined;
         });
     }
 

@@ -40,6 +40,10 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
         // set color ...
     }
 
+    destroyMesh(): void {
+        this._mesh.dispose();
+    }
+
     initEventDetector(): void {
         let that = this;
         this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
@@ -60,24 +64,58 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
             })
         )
 
+        // item with a price
+        if (this._price > 0) {
+            this._mesh.actionManager.registerAction(
+                new Babylon.ExecuteCodeAction({
+                    trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+                    parameter: {
+                        mesh: SceneController.getInstance().player.playerMesh,
+                        usePreciseIntersection: true
+                    }
+                }, (evt: Babylon.ActionEvent) => {
+                    console.log("player leaves an purchas-able item ");
+                    EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeaveAnItem, {
+                        object: that,
+                        message: "Player leaves an purchas-able item"
+                    });
+                })
+
+            )
+        }
+
     }
 
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Item.getFnOnCollisionWithPlayer(this));
+
+        if (this._price > 0) {
+            EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemBePurchased, Item.getFnOnItemBePurchased(this));
+        }
     }
 
-    static getFnOnCollisionWithPlayer(item: Item) {
-        return function (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) {
+    static getFnOnCollisionWithPlayer(item: Item): MyTypes.EventHandler {
+        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (item == undefined) return;
             if (item == eventMessage.object) {
                 if (item._price == 0) {
                     setTimeout(() => {
-                        (<Item>item).mesh.dispose(); // might have some post-error
+                        (<Item>item).destroyMesh() // might have some post-error
                     }, 100);
                 } else {
-                    // needs to be purchased
-                    // ...
+                    // maybe: a color change / price text show up
                 }
+            }
+        }
+    }
+
+    static getFnOnItemBePurchased(item: Item): MyTypes.EventHandler {
+        return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (item == undefined) return;
+            if (item == eventMessage.object) {
+                setTimeout(() => {
+                    item.destroyMesh();
+                }, 100);
             }
         }
     }
@@ -96,6 +134,13 @@ export class ItemFactory implements MyTypes.EventSubscriber {
             quantity: 10,
             price: 0
         }, new Babylon.Vector3(15, 7, 0));
+
+        // test an item which needs to be purchased
+        this.createNewItem({
+            type: MyTypes.ItemType.HPRecovery,
+            quantity: 20,
+            price: 20
+        }, new Babylon.Vector3(12, 6, 0));
     }
 
     createNewItem(itemInfo: MyTypes.ItemInfo, location: Babylon.Vector3): void {

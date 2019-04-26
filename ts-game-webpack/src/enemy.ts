@@ -44,7 +44,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         this.HP = 100;
         this.moveSpeed = 0.1;
         this.attackDamage = 5;
-        this.gold = 20;
+        this.gold = 25;
         this.currentDirection = MyTypes.MoveDirection.Left;
     }
 

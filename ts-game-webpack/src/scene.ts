@@ -152,6 +152,9 @@ export class SceneController {
 
         // this._eventDispatcher.test();
         this._eventDispatcher.registerEventType(EventType.ItemCollideWithPlayer);
+        this._eventDispatcher.registerEventType(EventType.PlayerLeaveAnItem);
+        this._eventDispatcher.registerEventType(EventType.ItemBePurchased);
+
         this._eventDispatcher.registerEventType(EventType.BulletCollideWithEnemy);
         this._eventDispatcher.registerEventType(EventType.EnemyCollideWithPlayer);
         this._eventDispatcher.registerEventType(EventType.MapBlockCollideWithPlayer);
