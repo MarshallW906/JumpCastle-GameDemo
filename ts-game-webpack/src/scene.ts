@@ -62,6 +62,7 @@ export class SceneController {
         this.initGUI();
         this.initPlayer(); // also registered keyboard inputs
         this.initMap();
+
         this.initItem();
         this.initEnemyFactory();
         this.initBulletFactory();
@@ -99,7 +100,7 @@ export class SceneController {
 
         this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
-        this._followCamera.radius = 20;
+        this._followCamera.radius = 80;
         this._followCamera.noRotationConstraint = true;
         this._followCamera.heightOffset = 0;
 
@@ -137,12 +138,14 @@ export class SceneController {
 
     initEnemyFactory(): void {
         this._enemyFactory = new EnemyFactory();
-        this._enemyFactory.test();
+        // this._enemyFactory.test();
+        this._enemyFactory.createEnemiesByEnemyInfo(this._gameMap.enemyInfoArray);
     }
 
     initItem(): void {
         this._itemFactory = new ItemFactory();
-        this._itemFactory.test();
+        // this._itemFactory.test();
+        this._itemFactory.createItemsByItemInfoCollection(this._gameMap.itemInfo);
     }
 
     initBulletFactory(): void {

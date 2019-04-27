@@ -4,6 +4,7 @@ import * as _ from "lodash"
 import * as MyTypes from "./types";
 import { SceneController } from "./scene";
 import { EventDispatcher } from "./event_dispatcher";
+import { AutoRotationBehavior } from "@babylonjs/core";
 
 export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPublisher, MyTypes.EventSubscriber {
     // interface Ticker
@@ -29,22 +30,32 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     subtractAttackDamage(quantity: number): void { this.attackDamage -= quantity; }
     attack: MyTypes.NoReturnValFunc = MyTypes.NoReturnValFuncNoOp;
 
-    constructor(id: number, name: string, location: Babylon.Vector3) {
+    private _isBoss: boolean;
+    get isBoss(): boolean { return this._isBoss; }
+
+    constructor(id: number, name: string, enemyInfo: MyTypes.EnemyInfo) {
         this._id = id;
         this._name = name;
 
-        this.initProperties();
-        this.initMesh(location);
+        this._isBoss = false;
+        if (enemyInfo.isBoss != undefined) {
+            this._isBoss = enemyInfo.isBoss;
+        }
+        this.initProperties(Enemy.getEnemyPropertiesByEnemyType(enemyInfo.type));
+        this.initMesh(enemyInfo.location);
 
         this.initEventDetector();
         this.registerEventHandler();
     }
 
-    initProperties(): void {
-        this.HP = 100;
-        this.moveSpeed = 0.1;
-        this.attackDamage = 5;
-        this.gold = 25;
+    initProperties(properties: MyTypes.EnemyProperties): void {
+        this.HP = properties.maxHP;
+        this.moveSpeed = properties.moveSpeed;
+        this.attackDamage = properties.attackDamage;
+        this.gold = properties.gold;
+        this._size = this._isBoss ? properties.sizeIfIsBoss : properties.size;
+        this.items = properties.items;
+
         this.currentDirection = MyTypes.MoveDirection.Left;
     }
 
@@ -53,7 +64,9 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     private _name: string;
     private _mesh: Babylon.Mesh;
     get mesh(): Babylon.Mesh { return this._mesh; }
-    // interface ObjectWithMeshEntity
+
+    private _size: MyTypes.EnemySize;
+
     initMesh(location: Babylon.Vector3): void {
         this._mesh = Babylon.MeshBuilder.CreateBox(this._name, { width: 0.5, height: 0.5, depth: 0.5 }, SceneController.getInstance().gameScene);
         this._mesh.position = location;
@@ -66,12 +79,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     }
 
     animate(): void {
-        // judge move direction, then move
         this.move(this.currentDirection);
-    }
-
-    animate2(): void {
-
     }
 
     currentDirection: MyTypes.MoveDirection;
@@ -103,6 +111,22 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
             object: this,
             message: "An enemy is dead"
         });
+    }
+
+    static getEnemyPropertiesByEnemyType(enemyType: MyTypes.EnemyType): MyTypes.EnemyProperties {
+        switch (enemyType) {
+            case MyTypes.EnemyType.NormalSolider:
+                return {
+                    maxHP: 100,
+                    moveSpeed: 0.1,
+                    attackDamage: 5,
+                    gold: 25,
+                    items: undefined,
+                    size: { width: 0.5, height: 0.5, depth: 0.5 },
+                    sizeIfIsBoss: { width: 2, height: 2, depth: 2 },
+                }
+            // break;
+        }
     }
 
     initEventDetector(): void {
@@ -175,17 +199,23 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
     }
 
     test(): void {
-        this.createNewEnemy(new Babylon.Vector3(-4, 0.5, 0));
+        // this.createNewEnemy(new Babylon.Vector3(-4, 0.5, 0));
     }
 
-    createNewEnemy(location: Babylon.Vector3) {
+    createNewEnemy(enemyInfo: MyTypes.EnemyInfo) {
         let newEnemyId = this._enemies.length;
         let newEnemyName = _.join(["Enemy", newEnemyId.toString()], '-');
-        this._enemies.push(new Enemy(newEnemyId, newEnemyName, location));
+        this._enemies.push(new Enemy(newEnemyId, newEnemyName, enemyInfo));
     }
 
     removeEnemyById(enemyId: number): void {
         delete (this._enemies[enemyId]);
+    }
+
+    createEnemiesByEnemyInfo(enemyInfoArray: Array<MyTypes.EnemyInfo>): void {
+        enemyInfoArray.forEach((enemyInfo: MyTypes.EnemyInfo) => {
+            this.createNewEnemy(enemyInfo);
+        })
     }
 
     static getFnAnimateAllEnemies(enemyFactory: EnemyFactory): () => void {

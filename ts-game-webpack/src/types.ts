@@ -1,9 +1,8 @@
-import { Vector3 } from "@babylonjs/core";
+import { Vector3, Size } from "@babylonjs/core";
 
 import { Buff } from "./buff";
 
 // Types: Enum
-export enum EnemyType { }
 export enum BuffType { Permanent, Time, DependOnMap }
 
 // general func alias
@@ -78,8 +77,6 @@ export interface Creature {
     addAttackDamage: QuantityChangeFunc;
     subtractAttackDamage: QuantityChangeFunc;
     attack: NoReturnValFunc;
-
-    initProperties: NoReturnValFunc;
 }
 
 
@@ -102,14 +99,24 @@ export interface Ticker {
 }
 
 // Item
-export enum ItemType { SoulBall, HPRecovery, SPRecovery }
+export enum ItemType {
+    SoulBall,
+
+    HPRecovery,
+    SPRecovery,
+
+    AddSpRecoverSpeed,
+    AddAttackDamage,
+    AddMoveSpeed,
+}
 
 export type ItemCollection = Map<ItemType, number>;
 
 export interface ItemInfo {
     type: ItemType,
     quantity: number,
-    price?: number
+    price?: number,
+    location: Vector3,
 }
 
 // Move
@@ -128,7 +135,6 @@ export interface MapBlockSize {
     height: number,
     depth: number
 }
-export type EnemySize = MapBlockSize;
 
 export interface MapBlockAttributes {
     /**
@@ -147,4 +153,26 @@ export interface MapBlockInfo {
     length: number;
     location: Vector3;
     attributes?: MapBlockAttributes;
+}
+
+// Enemy
+export type EnemySize = MapBlockSize;
+export enum EnemyType {
+    NormalSolider,
+}
+export interface EnemyInfo {
+    type: EnemyType,
+    location: Vector3,
+
+    isBoss?: boolean,
+}
+export interface EnemyProperties {
+    maxHP: number,
+    moveSpeed: number,
+    attackDamage: number,
+    gold: number,
+
+    items: ItemCollection | undefined,
+    size: EnemySize,
+    sizeIfIsBoss: EnemySize,
 }

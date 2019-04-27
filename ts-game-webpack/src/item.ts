@@ -19,14 +19,14 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
     private _mesh: Babylon.Mesh;
     get mesh(): Babylon.Mesh { return this._mesh; }
 
-    constructor(id: number, name: string, location: Babylon.Vector3, itemInfo: MyTypes.ItemInfo) {
+    constructor(id: number, name: string, itemInfo: MyTypes.ItemInfo) {
         this._id = id;
         this._name = name;
         this._type = itemInfo.type;
         this._quantity = itemInfo.quantity;
         this._price = itemInfo.price;
 
-        this.initMesh(location);
+        this.initMesh(itemInfo.location);
         this.initEventDetector();
         this.registerEventHandler();
     }
@@ -86,6 +86,15 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
 
     }
 
+    static getSoulBallItemInfo(quantity: number, location: Babylon.Vector3): MyTypes.ItemInfo {
+        return {
+            type: MyTypes.ItemType.SoulBall,
+            quantity: 10,
+            price: 0,
+            location: location,
+        }
+    }
+
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Item.getFnOnCollisionWithPlayer(this));
 
@@ -126,26 +135,36 @@ export class ItemFactory implements MyTypes.EventSubscriber {
 
     constructor() {
         this._items = new Array<Item>();
+
+        this.registerEventHandler();
     }
 
     test(): void {
         this.createNewItem({
             type: MyTypes.ItemType.SoulBall,
             quantity: 10,
-            price: 0
-        }, new Babylon.Vector3(15, 7, 0));
+            price: 0,
+            location: new Babylon.Vector3(15, 7, 0),
+        });
 
         // test an item which needs to be purchased
         this.createNewItem({
             type: MyTypes.ItemType.HPRecovery,
             quantity: 20,
-            price: 20
-        }, new Babylon.Vector3(12, 6, 0));
+            price: 20,
+            location: new Babylon.Vector3(12, 6, 0),
+        });
     }
 
-    createNewItem(itemInfo: MyTypes.ItemInfo, location: Babylon.Vector3): void {
+    createItemsByItemInfoCollection(itemInfo: Array<MyTypes.ItemInfo>) {
+        itemInfo.forEach((itemInfo: MyTypes.ItemInfo) => {
+            this.createNewItem(itemInfo);
+        });
+    }
+
+    createNewItem(itemInfo: MyTypes.ItemInfo): void {
         let newItemName = _.join(["Item", itemInfo.type, this._items.length.toString()], '-');
-        this._items.push(new Item(this._items.length, newItemName, location, itemInfo));
+        this._items.push(new Item(this._items.length, newItemName, itemInfo));
     }
 
     /**
@@ -164,7 +183,7 @@ export class ItemFactory implements MyTypes.EventSubscriber {
     static getFnOnItemCollideWithPlayer(object: any) {
         return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (object == undefined) return;
-            <ItemFactory>object.destroyItem(eventMessage.object.id);
+            <ItemFactory>object.removeItemById(eventMessage.object.id);
         }
     }
 

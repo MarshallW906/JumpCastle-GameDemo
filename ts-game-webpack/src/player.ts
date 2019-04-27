@@ -135,6 +135,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         let that = this;
         this._gameScene.registerBeforeRender(() => {
             that.playerMesh.physicsImpostor.setAngularVelocity(Babylon.Vector3.Zero());
+            that.playerMesh.position.z = 0;
         })
     }
     destroyMesh(): void {

@@ -10,6 +10,7 @@ import * as MyTypes from "./types";
 import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
+import { Item } from "./item";
 
 class MapBlock implements MyTypes.EventPublisher {
     /**
@@ -129,11 +130,17 @@ export class GameMap implements MyTypes.EventSubscriber {
     private _mapBlockList: Array<MapBlock>;
     private _mapInfo: Array<MyTypes.MapBlockInfo>;
 
+
     private _teleportPointInfo: Array<Babylon.Vector3>;
     private _teleportPointsUnlocked: Array<boolean>;
     get teleportPointsUnlocked(): Array<boolean> { return this._teleportPointsUnlocked; }
     private _teleportPoints: Array<TeleportPoint>;
     get teleportPoint(): Array<TeleportPoint> { return this._teleportPoints; }
+    private _itemInfo: Array<MyTypes.ItemInfo>
+    get itemInfo(): Array<MyTypes.ItemInfo> { return this._itemInfo; }
+    private _enemyInfoArray: Array<MyTypes.EnemyInfo>;
+    get enemyInfoArray(): Array<MyTypes.EnemyInfo> { return this._enemyInfoArray; }
+    // private _bossEnemyInfo:
 
     constructor() {
         this._mapBlockList = new Array<MapBlock>();
@@ -142,9 +149,13 @@ export class GameMap implements MyTypes.EventSubscriber {
         this._teleportPointInfo = new Array<Babylon.Vector3>();
         this._teleportPointsUnlocked = new Array<boolean>();
         this._teleportPoints = new Array<TeleportPoint>();
+
+        this._itemInfo = new Array<MyTypes.ItemInfo>();
+        this._enemyInfoArray = new Array<MyTypes.EnemyInfo>();
     }
 
     private initMapInfo(): void {
+        /* for test
         // plain MapBlocks
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
         this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, Babylon.Vector3.Zero()));
@@ -152,7 +163,277 @@ export class GameMap implements MyTypes.EventSubscriber {
         // Teleport Points
         this._teleportPointInfo.push(new Babylon.Vector3(2, 0.5, 0));
         this._teleportPointInfo.push(new Babylon.Vector3(15, 5.5, 0));
+        */
+
+        // map: floor 1
+        this._mapInfo.push({
+            type: MyTypes.MapBlockType.Plain,
+            length: 25,
+            location: new Babylon.Vector3(12.5, 0, 0),
+            attributes: {}
+        }, {
+                type: MyTypes.MapBlockType.Trap,
+                length: 15,
+                location: new Babylon.Vector3(32.5, 0, 0),
+                attributes: {
+                    damagePerSecond: 5
+                }
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 30,
+                location: new Babylon.Vector3(55, 0, 0),
+                attributes: {}
+            }, {
+                type: MyTypes.MapBlockType.Modifier,
+                length: 15,
+                location: new Babylon.Vector3(77.5, 0, 0),
+                attributes: {
+                    // buffs: 
+                }
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 15,
+                location: new Babylon.Vector3(92.5, 0, 0),
+                attributes: {}
+            });
+
+        // map: floor 2
+        this._mapInfo.push({
+            type: MyTypes.MapBlockType.Trap,
+            length: 40,
+            location: new Babylon.Vector3(20, 12, 0),
+            attributes: {
+                damagePerSecond: 5
+            }
+        }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 20,
+                location: new Babylon.Vector3(55, 12, 0),
+                attributes: {
+                    damagePerSecond: 5
+                }
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 30,
+                location: new Babylon.Vector3(85, 12, 0),
+                attributes: {}
+            });
+
+        // map: floor 3
+        this._mapInfo.push({
+            type: MyTypes.MapBlockType.Plain,
+            length: 40,
+            location: new Babylon.Vector3(20, 24, 0),
+            attributes: {}
+        }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 25,
+                location: new Babylon.Vector3(52.5, 24, 0),
+                attributes: {}
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 30,
+                location: new Babylon.Vector3(85, 24, 0),
+                attributes: {}
+            });
+
+        // map: floor 4
+        this._mapInfo.push({
+            type: MyTypes.MapBlockType.Modifier,
+            length: 20,
+            location: new Babylon.Vector3(10, 36, 0),
+            attributes: {
+                // buffs: 
+            }
+        }, {
+                type: MyTypes.MapBlockType.Modifier,
+                length: 25,
+                location: new Babylon.Vector3(32.5, 36, 0),
+                attributes: {
+                    // buffs: 
+                }
+            }, {
+                type: MyTypes.MapBlockType.Trap,
+                length: 20,
+                location: new Babylon.Vector3(55, 36, 0),
+                attributes: {
+                    damagePerSecond: 5
+                }
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 30,
+                location: new Babylon.Vector3(80, 36, 0),
+                attributes: {}
+            });
+
+        // map: floor 5
+        this._mapInfo.push({
+            type: MyTypes.MapBlockType.Modifier,
+            length: 25,
+            location: new Babylon.Vector3(17.5, 48, 0),
+            attributes: {
+                // buffs:
+            }
+        }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 25,
+                location: new Babylon.Vector3(47.5, 48, 0),
+                attributes: {
+                    // buffs:
+                }
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 25,
+                location: new Babylon.Vector3(87.5, 48, 0),
+                attributes: {}
+            })
+
+        // map: teleport points, 3 in total
+        this._teleportPointInfo.push(
+            new Babylon.Vector3(12.5, 0.5, 0), // start point
+            new Babylon.Vector3(5, 24.5, 0), // floor 3 at the shop
+            new Babylon.Vector3(80, 48.5, 0), // near the destination point
+        );
+
     };
+
+    private initItemLocations(): void {
+        this._itemInfo.push(
+            // floor 1
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(5, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(15, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(25, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(35, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(45, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(55, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(65, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(75, 8, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(85, 8, 0)),
+
+            // floor 2
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(10, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(20, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(30, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(50, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(60, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(80, 20, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(90, 20, 0)),
+
+            // floor 3
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(47, 32, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(54, 32, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(80, 32, 0)),
+            Item.getSoulBallItemInfo(10, new Babylon.Vector3(90, 32, 0)),
+
+            // floor 4
+            Item.getSoulBallItemInfo(20, new Babylon.Vector3(85, 44, 0)),
+        );
+
+        // other items
+        this._itemInfo.push(
+            {
+                type: MyTypes.ItemType.AddSpRecoverSpeed,
+                quantity: 2,
+                price: 0,
+                location: new Babylon.Vector3(95, 1, 0),
+            }, {
+                type: MyTypes.ItemType.AddAttackDamage,
+                quantity: 10,
+                price: 0,
+                location: new Babylon.Vector3(95, 13, 0),
+            }, {
+                type: MyTypes.ItemType.AddMoveSpeed,
+                quantity: 0.15,
+                price: 0,
+                location: new Babylon.Vector3(5, 13, 0),
+            }, {
+                type: MyTypes.ItemType.HPRecovery,
+                quantity: 100,
+                price: 0,
+                location: new Babylon.Vector3(5, 56, 0),
+            }, {
+                type: MyTypes.ItemType.SPRecovery,
+                quantity: 100,
+                price: 0,
+                location: new Babylon.Vector3(60, 56, 0),
+            }
+        );
+
+        // items for sale
+        this._itemInfo.push(
+            {
+                type: MyTypes.ItemType.AddAttackDamage,
+                quantity: 10,
+                price: 100,
+                location: new Babylon.Vector3(10, 25, 0),
+            }, {
+                type: MyTypes.ItemType.AddSpRecoverSpeed,
+                quantity: 4,
+                price: 100,
+                location: new Babylon.Vector3(20, 25, 0),
+            }, {
+                type: MyTypes.ItemType.HPRecovery,
+                quantity: 50,
+                price: 100,
+                location: new Babylon.Vector3(30, 25, 0),
+            }
+        )
+    }
+
+    private initEnemyInfoArray(): void {
+        this._enemyInfoArray.push(
+            // floor 1
+            {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(32.5, 0.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(50, 0.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(60, 0.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(80, 0.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(95, 0.5, 0),
+            },
+            // floor 2
+            {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(20, 12.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(60, 12.5, 0),
+            },
+            // floor 3
+            {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(50, 24.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(60, 24.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(85, 24.5, 0),
+            },
+            // floor 4
+            {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(80, 36.5, 0),
+            }, {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(90, 36.5, 0),
+            },
+            // boss at floor 4
+            {
+                type: MyTypes.EnemyType.NormalSolider,
+                location: new Babylon.Vector3(20, 36.5, 0),
+                isBoss: true
+            },
+        )
+    }
 
     private createNewMapBlock(mapBlockInfo: MyTypes.MapBlockInfo): void {
         let blockTypeNameArray = new Array<string>();
@@ -196,6 +477,9 @@ export class GameMap implements MyTypes.EventSubscriber {
         this.initMapInfo();
         this.initCurrentMapBlocks();
         this.initTeleportPoints();
+
+        this.initItemLocations();
+        this.initEnemyInfoArray();
 
         this.registerEventHandler();
     }
