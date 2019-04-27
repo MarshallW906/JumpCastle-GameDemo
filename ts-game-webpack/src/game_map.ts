@@ -68,7 +68,7 @@ export class MapBlock implements MyTypes.EventPublisher {
             material.diffuseColor = Babylon.Color3.Red();
         }
         if (this._type & MyTypes.MapBlockType.Modifier) {
-            material.diffuseColor = Babylon.Color3.Blue();
+            material.diffuseColor = Babylon.Color3.Random();
         }
         this._mesh.material = material;
     }
