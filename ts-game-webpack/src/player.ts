@@ -24,6 +24,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         if (this.HP > this._maxHP) {
             this.HP = this._maxHP;
         }
+        this.sendGUIQuantityChangeEvent("HP", this.HP);
     }
     subtractHP(quantity: number): void {
         this.HP -= quantity;
@@ -31,6 +32,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             this.HP = 0;
             this.onDead();
         }
+        this.sendGUIQuantityChangeEvent("HP", this.HP);
     }
 
     private _invincible: boolean;
@@ -66,10 +68,12 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         if (this.SP > this._maxSP) {
             this.SP = this._maxSP;
         }
+        this.sendGUIQuantityChangeEvent("SP", this.SP);
     }
     subtractSP(quantity: number): void {
         this.SP -= quantity;
         if (this.SP < 0) this.SP = 0;
+        this.sendGUIQuantityChangeEvent("SP", this.SP);
     }
 
     private _SPRecoverTimer: any;
@@ -77,8 +81,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         let that = this;
         this._SPRecoverTimer = setInterval(() => {
             that.addSP(that.SPRecoverSpeed);
-            console.log("Player SP:", that.SP);
         }, 1000);
+        // clearInterval(this._SPRecoverTimer); // to stop the timer loop
     }
 
     moveSpeed: number
@@ -245,10 +249,21 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     gold: number;
-    addGold(quantity: number): void { this.gold += quantity; }
+    addGold(quantity: number): void {
+        this.gold += quantity;
+        this.sendGUIQuantityChangeEvent("Gold", this.gold);
+    }
+    subtractGold(quantity: number): void {
+        if (this.gold < quantity) return;
+        this.gold -= quantity;
+        this.sendGUIQuantityChangeEvent("Gold", this.gold);
+    }
 
     soul: number;
-    addSoul(quantity: number): void { this.soul += quantity; }
+    addSoul(quantity: number): void {
+        this.soul += quantity;
+        this.sendGUIQuantityChangeEvent("Soul", this.soul);
+    }
 
     // jump
     jump(): void {
@@ -386,8 +401,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         if (this.currentPickedItem == undefined) return;
 
         if (this.currentPickedItem.price <= this.gold) {
-            this.gold -= this.currentPickedItem.price;
-            console.log(this.gold);
+            this.subtractGold(this.currentPickedItem.price);
+            // console.log(this.gold);
 
             this.getItem(this.currentPickedItem);
 
@@ -406,6 +421,13 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         // now implemented
     }
 
+    sendGUIQuantityChangeEvent(propertyToChange: string, newValue: any): void {
+        EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.GUIQuantityChange, {
+            object: newValue,
+            message: propertyToChange
+        });
+    }
+
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
@@ -421,7 +443,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             if (player != SceneController.getInstance().player) return;
 
             player.getDamage((<Enemy>eventMessage.object).attackDamage);
-            console.log("Player current HP:", player.HP);
+            // console.log("Player current HP:", player.HP);
         });
     }
 
@@ -463,7 +485,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (player != SceneController.getInstance().player) return;
 
-            player.gold += eventMessage.object.gold;
+            player.addGold(eventMessage.object.gold);
             console.log("player current gold", player.gold);
             // player.items, concat with eventMessage.object.items
         })

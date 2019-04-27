@@ -1,5 +1,6 @@
 import * as BabylonGUI from "@babylonjs/gui";
-import * as BABYLON from "@babylonjs/core";
+import * as Babylon from "@babylonjs/core";
+import * as _ from "lodash";
 
 import * as MyTypes from './types';
 import { SceneController } from "./scene";
@@ -51,9 +52,21 @@ export class GUIController implements MyTypes.EventSubscriber {
 
         this.initPanelGameOver();
         this.initPanelWin();
-        this.initPanelGameRuntime();
+        this.initGUIElementsGameRuntime();
 
         this.composeGUItest();
+
+        this.registerEventHandler();
+    }
+
+    refreshAllGUI(): void {
+        let player = SceneController.getInstance().player;
+        this.UpdateHPBar(player.HP);
+        this.UpdateSPBar(player.SP);
+        this.UpdateGold(player.gold);
+        this.UpdateSoul(player.soul);
+        this.UpdateItemList(player.items);
+        // this.UpdateBuffList(player.buffs)
     }
 
     private composeGUItest(): void {
@@ -64,22 +77,17 @@ export class GUIController implements MyTypes.EventSubscriber {
 
         this.panelWin.addControl(this.textblockWin);
 
-        this.panelGameRuntime.addControl(this.HPbar);
-        this.panelGameRuntime.addControl(this.SPbar);
-        this.panelGameRuntime.addControl(this.textblockGold);
-        this.panelGameRuntime.addControl(this.textblockSoul);
-        this.panelGameRuntime.addControl(this.itemList);
-        this.panelGameRuntime.addControl(this.buffList);
+        this.guiElementsGameRuntime.forEach((guiElement) => {
+            if (guiElement !== undefined) {
+                this.advancedTexture.addControl(<BabylonGUI.Control>guiElement);
+            }
+        });
 
-        this.advancedTexture.addControl(this.panelGameRuntime);
+
         this.advancedTexture.addControl(this.panelWin);
         this.advancedTexture.addControl(this.panelGameOver);
     }
 
-    test(): void {
-        console.log('test guicontroller func');
-        this.panelWin.addControl(this.textblockGold);
-    }
 
     Loading(): void {
         this.hideCurrentGUI();
@@ -103,7 +111,11 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.currentGUIMode = MyTypes.GUIMode.GameRuntime;
 
         // display GameRuntime GUI
-        this.panelGameRuntime.isVisible = true;
+        this.guiElementsGameRuntime.forEach((guiElement) => {
+            if (guiElement !== undefined) {
+                guiElement.isVisible = true;
+            }
+        })
     }
     GameOver(): void {
         // no need to hideGUI()
@@ -153,13 +165,17 @@ export class GUIController implements MyTypes.EventSubscriber {
         });
     }
 
-    UpdateHPBar(curHP: number): void { }
+    UpdateHPBar(curHP: number): void {
+        this.HPbar.value = curHP;
+    }
 
-    UpdateSPBar(curSP: number): void { }
+    UpdateSPBar(curSP: number): void {
+        this.SPbar.value = curSP;
+    }
 
-    UpdateGold(curGold: number): void { }
+    UpdateGold(curGold: number): void { this.textblockGold.text = _.join(["G:", curGold.toString()], ' '); }
 
-    UpdateSoul(curSoul: number): void { }
+    UpdateSoul(curSoul: number): void { this.textblockSoul.text = _.join(["S:", curSoul.toString()], ' '); }
 
     UpdateItemList(curItemList: MyTypes.ItemCollection): void { }
 
@@ -174,7 +190,12 @@ export class GUIController implements MyTypes.EventSubscriber {
         // this.progressBarLoading.isVisible = false;
         this.panelGameOver.isVisible = false; // textblockGameOver
         this.panelWin.isVisible = false;      // textblockWin
-        this.panelGameRuntime.isVisible = false; // HP&SP bar, Gold, Soul, Item&Buff List
+
+        this.guiElementsGameRuntime.forEach((guiElement: any) => {
+            if (guiElement !== undefined) {
+                guiElement.isVisible = false;
+            }
+        })
 
         this.buttonStart.isVisible = false;
         this.buttonRestart.isVisible = false;
@@ -241,8 +262,8 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonReturnToTitle.isVisible = true;
     }
 
-    private textblockGameOver: any; // maybe BabylonGUI.TextBlock
-    private textblockWin: any; // same as textlabel of GameOver
+    private textblockGameOver: BabylonGUI.TextBlock; // maybe BabylonGUI.TextBlock
+    private textblockWin: BabylonGUI.TextBlock; // same as textlabel of GameOver
 
     private initTextblockGameOver(): void {
         this.textblockGameOver = new BabylonGUI.TextBlock();
@@ -272,28 +293,57 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.logoGameTitle.top = '-200px';
     }
 
-    private HPbar: any; // use something to simulate HP bar
-    private SPbar: any; // same as HP bar;
-    private initHPBar(): void { }
-    private initSPBar(): void { }
+    private HPbar: BabylonGUI.Slider; // use something to simulate HP bar
+    private SPbar: BabylonGUI.Slider; // same as HP bar;
+    private initHPBar(): void {
+        this.HPbar = new BabylonGUI.Slider();
+        this.HPbar.minimum = 0;
+        this.HPbar.maximum = 100;
+        this.HPbar.value = 100;
+        this.HPbar.height = "20px";
+        this.HPbar.width = "200px";
+        this.HPbar.displayThumb = false;
+        this.HPbar.color = "yellow";
+        this.HPbar.background = "red";
+        this.HPbar.top = "-250px";
+        this.HPbar.left = "-250px";
+    }
+    private initSPBar(): void {
+        this.SPbar = new BabylonGUI.Slider();
+        this.SPbar.minimum = 0;
+        this.SPbar.maximum = 100;
+        this.SPbar.value = 100;
+        this.SPbar.height = "20px";
+        this.SPbar.width = "160px";
+        this.SPbar.displayThumb = false;
+        this.SPbar.color = 'green';
+        this.SPbar.background = "blue";
+        this.SPbar.top = "-225px";
+        this.SPbar.left = "-270px";
+    }
 
-    private textblockGold: any; // maybe BabylonGUI.TextBlock?
-    private textblockSoul: any; // same as Gold label
+    private textblockGold: BabylonGUI.TextBlock; // maybe BabylonGUI.TextBlock?
+    private textblockSoul: BabylonGUI.TextBlock; // same as Gold label
     private initTextblockGold(): void {
         this.textblockGold = new BabylonGUI.TextBlock();
         this.textblockGold.text = 'G: 0';
         this.textblockGold.color = 'white';
-        this.textblockGold.fontSize = 24;
-        // this.textblockGold.top = '-100px';
-        // this.textblockGold.left = '-200px'
+        this.textblockGold.fontSize = 20;
+        this.textblockGold.width = 0.2;
+        this.textblockGold.height = "30px";
+        this.textblockGold.top = '-250px';
+        this.textblockGold.left = '-100px';
+
     }
     private initTextblockSoul(): void {
         this.textblockSoul = new BabylonGUI.TextBlock();
         this.textblockSoul.text = 'S: 0';
         this.textblockSoul.color = 'white';
-        this.textblockSoul.fontSize = 24;
-        // this.textblockSoul.top = '-150px';
-        // this.textblockSoul.left = '-200px'
+        this.textblockSoul.fontSize = 20;
+        this.textblockSoul.width = 0.2;
+        this.textblockSoul.height = "40px";
+        this.textblockSoul.top = '-220px';
+        this.textblockSoul.left = '-100px'
     }
 
     private itemList: any; // something like an item list?
@@ -303,7 +353,7 @@ export class GUIController implements MyTypes.EventSubscriber {
 
     private panelGameOver: any; // maybe something like a panel
     private panelWin: any; // same as panelGameOver
-    private panelGameRuntime: any; // same as above
+    private guiElementsGameRuntime: Array<any>; // same as above
     private initPanelGameOver(): void {
         this.panelGameOver = new BabylonGUI.StackPanel("GameOver");
         this.panelGameOver.background = 'red';
@@ -318,16 +368,16 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.panelWin.width = '30%';
         this.panelWin.height = '40%';
     }
-    private initPanelGameRuntime(): void {
-        this.panelGameRuntime = new BabylonGUI.StackPanel("GameRuntime");
-        // this.panelWin.background = '';  background transparent, no filling color.
-        // this.panelGameRuntime.width = '100%'; default to 100%.
-        this.panelGameRuntime.width = '95%';
-        this.panelGameRuntime.height = '95%';
-        // this.panelGameRuntime.background = 'blue';
-        this.panelGameRuntime.alpha = 0.5;
-        this.panelGameRuntime.isVisible = true;
-        this.panelGameRuntime.zIndex = -1;
+    private initGUIElementsGameRuntime(): void {
+        this.guiElementsGameRuntime = new Array<BabylonGUI.Control>();
+        this.guiElementsGameRuntime.push(
+            this.HPbar,
+            this.SPbar,
+            this.textblockGold,
+            this.textblockSoul,
+            this.itemList,
+            this.buffList
+        );
     }
 
     private onClickedButtonStart(): void {
@@ -358,22 +408,22 @@ export class GUIController implements MyTypes.EventSubscriber {
             let HUDtoChange: string = eventMessage.message;
             switch (HUDtoChange) {
                 case "HP":
-                    guiController.UpdateHPBar(eventMessage.object.HP);
+                    guiController.UpdateHPBar(eventMessage.object);
                     break;
                 case "SP":
-                    guiController.UpdateSPBar(eventMessage.object.SP);
+                    guiController.UpdateSPBar(eventMessage.object);
                     break;
                 case "Gold":
-                    guiController.UpdateGold(eventMessage.object.Gold);
+                    guiController.UpdateGold(eventMessage.object);
                     break;
                 case "Soul":
-                    guiController.UpdateSoul(eventMessage.object.Soul);
+                    guiController.UpdateSoul(eventMessage.object);
                     break;
                 case "ItemList":
-                    guiController.UpdateItemList(eventMessage.object.HP);
+                    guiController.UpdateItemList(eventMessage.object);
                     break;
                 case "BuffList":
-                    guiController.UpdateBuffList(eventMessage.object.itemList);
+                    guiController.UpdateBuffList(eventMessage.object);
                     break;
             }
         })
@@ -383,7 +433,7 @@ export class GUIController implements MyTypes.EventSubscriber {
 
 
 // loading scene test
-export class MyLoadingScreen implements BABYLON.ILoadingScreen {
+export class MyLoadingScreen implements Babylon.ILoadingScreen {
     //optional, but needed due to interface definitions
     public loadingUIBackgroundColor: string;
     constructor(public loadingUIText: string) { }

@@ -34,6 +34,8 @@ export class SceneController {
     get followCamera(): Babylon.FollowCamera { return this._followCamera; }
     private _physicsPlugin: any;
 
+    private _guiController: GUIController;
+
     private _player: Player;
     get player(): Player { return this._player; }
     private _gameMap: GameMap;
@@ -63,6 +65,8 @@ export class SceneController {
         this.initItem();
         this.initEnemyFactory();
         this.initBulletFactory();
+
+        this._guiController.refreshAllGUI();
     }
 
     restart(): void { this.initAll(); }
@@ -109,12 +113,12 @@ export class SceneController {
     }
 
     initGUI(): void {
-        let guiController: GUIController = GUIController.getInstance();
-        guiController.init();
-        guiController.HideAll();
-        // guiController.GameRuntime();
+        this._guiController = GUIController.getInstance();
+        this._guiController.init();
+        this._guiController.HideAll();
+        this._guiController.GameRuntime();
         // for test
-        guiController.TestGUI();
+        this._guiController.TestGUI();
     }
 
     initPlayer(): void {
