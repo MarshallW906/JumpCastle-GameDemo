@@ -8,8 +8,8 @@ import { SceneController } from './scene';
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
 import { Item } from "./item";
-import { TeleportPoint } from "./game_map";
-
+import { TeleportPoint, MapBlock } from "./game_map";
+import { Buff } from "./buff";
 
 export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, MyTypes.Ticker, MyTypes.EventSubscriber {
     // interface Ticker
@@ -19,8 +19,13 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     // interface Creature
     HP: number
     _maxHP: number;
-    addHP(quantity: number): void {
-        this.HP += quantity;
+    HPRecoverSpeed: number;
+    addHP(quantity: number, isAutoRecover?: boolean): void {
+        if (isAutoRecover !== undefined && isAutoRecover == true) {
+            this.HP += this.HPRecoverSpeed;
+        } else {
+            this.HP += quantity;
+        }
         if (this.HP > this._maxHP) {
             this.HP = this._maxHP;
         }
@@ -63,8 +68,12 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     SP: number
     SPRecoverSpeed: number
     _maxSP: number;
-    addSP(quantity: number): void {
-        this.SP += quantity;
+    addSP(quantity: number, isAutoRecover?: boolean): void {
+        if (isAutoRecover !== undefined && isAutoRecover == true) {
+            this.SP += this.SPRecoverSpeed;
+        } else {
+            this.SP += quantity;
+        }
         if (this.SP > this._maxSP) {
             this.SP = this._maxSP;
         }
@@ -75,12 +84,19 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         if (this.SP < 0) this.SP = 0;
         this.sendGUIQuantityChangeEvent("SP", this.SP);
     }
+    addSPRecoverSpeed(quantity: number): void {
+        this.SPRecoverSpeed += quantity;
+    }
+    subtractSPRecoverSpeed(quantity: number): void {
+        this.SPRecoverSpeed -= quantity;
+    }
 
-    private _SPRecoverTimer: any;
-    private StartSPRecover(): void {
+    private _TimerPerSec: any;
+    private StartAutoRecoverPerSec(): void {
         let that = this;
-        this._SPRecoverTimer = setInterval(() => {
-            that.addSP(that.SPRecoverSpeed);
+        this._TimerPerSec = setInterval(() => {
+            that.addHP(0, true);
+            that.addSP(0, true);
         }, 1000);
         // clearInterval(this._SPRecoverTimer); // to stop the timer loop
     }
@@ -107,11 +123,15 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
         this.HP = this._maxHP;
         this.SP = this._maxSP;
+        this.HPRecoverSpeed = 0;
         this.SPRecoverSpeed = 2;
         this.moveSpeed = 0.3;
         this.attackDamage = 30;
         this.gold = 50;
         this.soul = 0;
+
+        this.items = new Map<MyTypes.ItemType, number>();
+        this._buffs = new Array<Buff>();
 
         this._curTeleportPointId = undefined;
         this._canTeleport = false;
@@ -189,36 +209,36 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
         // J: attack
         createKeyUpAction('J', (evt: any) => {
-            console.log('J/j was pressed. Call player.attack().');
+            // console.log('J/j was pressed. Call player.attack().');
             that.attack();
         });
 
         // K: jump
         createKeyUpAction('K', (evt: any) => {
-            console.log('K/k was pressed. Call player.jump().');
+            // console.log('K/k was pressed. Call player.jump().');
             that.jump();
         });
 
         // space: force shield. Makes the player invulnerable for 2 seconds.
         createKeyUpAction(' ', (evt: any) => {
-            console.log('space was pressed. Call player.shield().');
+            // console.log('space was pressed. Call player.shield().');
             that.shield();
         })
 
         // F: purchase item.
         createKeyUpAction('F', (evt: any) => {
-            console.log('F/f was pressed. Purchase Item.');
+            // console.log('F/f was pressed. Purchase Item.');
             // purchase Item
             that.purchaseItem();
         });
 
         // R/T: move to previous/next teleport point (if applicable)
         createKeyUpAction('Q', (evt: any) => {
-            console.log("Q/q was pressed. Call Player.teleportToPreviousPortal().");
+            // console.log("Q/q was pressed. Call Player.teleportToPreviousPortal().");
             that.teleportToPreviousPortal();
         });
         createKeyUpAction('E', (evt: any) => {
-            console.log("E/e was pressed. Call Player.teleportToNextPortal().");
+            // console.log("E/e was pressed. Call Player.teleportToNextPortal().");
             that.teleportToNextPortal();
         });
     }
@@ -227,11 +247,11 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         let that = this;
         this._gameScene.registerBeforeRender(() => {
             if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
-                console.log("A. Move to Left");
+                // console.log("A. Move to Left");
                 that.move(MyTypes.MoveDirection.Left);
             }
             if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
-                console.log("D. Move to Right");
+                // console.log("D. Move to Right");
                 that.move(MyTypes.MoveDirection.Right);
             }
         })
@@ -243,7 +263,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     init(): void {
         this.initProperties();
         this.initMesh();
-        this.StartSPRecover();
+        this.StartAutoRecoverPerSec();
+
         this.registerKeyboardActions();
         this.registerBeforeRenderFuncs();
         this.registerEventHandler();
@@ -418,6 +439,9 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         }
     }
 
+    _buffs: Array<Buff>;
+    get buffs(): Array<Buff> { return this._buffs; }
+
     onDead(): void {
         // now implemented
     }
@@ -430,10 +454,14 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     registerEventHandler(): void {
-        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.MapBlockCollideWithPlayer, Player.getFnOnCollideWithNormalMapBlock(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerEntersMapBlock, Player.getFnOnEnterMapBlock(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerLeavesMapBlock, Player.getFnOnLeaveMapBlock(this));
+
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyCollideWithPlayer, Player.getFnOnCollideWithEnemy(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.EnemyDead, Player.getFnOnEnemyDead(this));
+
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.ItemCollideWithPlayer, Player.getFnOnCollideWithItem(this));
+
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerEnterTeleportPoint, Player.getFnOnPlayerEnterTeleportPoint(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerExitTeleportPoint, Player.getFnOnPlayerExitTeleportPoint(this));
     }
@@ -448,15 +476,72 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         });
     }
 
-    static getFnOnCollideWithNormalMapBlock(player: Player) {
+    static getFnOnEnterMapBlock(player: Player) {
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            console.log("Event handler from player: Mapblock collide with player")
+            // console.log("Event handler from player: Player Enters a mapblock")
             if (player != SceneController.getInstance().player) return;
 
             player.resetJumpState();
             let linearVelocity = player.playerMesh.physicsImpostor.getLinearVelocity();
             linearVelocity.x = 0;
             player.playerMesh.physicsImpostor.setLinearVelocity(linearVelocity);
+
+            let mapBlock = <MapBlock>eventMessage.object;
+            if (mapBlock.type & MyTypes.MapBlockType.Trap) {
+                player.getDamage(mapBlock.damage);
+            }
+            if (mapBlock.type & MyTypes.MapBlockType.Modifier) {
+                if (mapBlock.modifiers == undefined) return;
+
+                mapBlock.modifiers.forEach((buff: Buff) => {
+                    if (buff.type == MyTypes.BuffType.DependOnMap) {
+                        switch (buff.propertyAffected) {
+                            case MyTypes.Property.AttackDamage:
+                                player.addAttackDamage(buff.quantityToChange);
+                                break;
+                            case MyTypes.Property.HPRecoverSpeed:
+                                player.HPRecoverSpeed += buff.quantityToChange;
+                                break;
+                            case MyTypes.Property.SPRecoverSpeed:
+                                player.SPRecoverSpeed += buff.quantityToChange;
+                                break;
+                            case MyTypes.Property.MoveSpeed:
+                                player.addMoveSpeed(buff.quantityToChange);
+                                break;
+                        }
+                    }
+                });
+            }
+        })
+    }
+
+    static getFnOnLeaveMapBlock(player: Player) {
+        // Modifiers only
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+            console.log("On player leaves a mapblock")
+            let mapBlock = <MapBlock>eventMessage.object;
+            if (mapBlock.modifiers == undefined) return;
+
+            mapBlock.modifiers.forEach((buff: Buff) => {
+                if (buff.type == MyTypes.BuffType.DependOnMap) {
+                    switch (buff.propertyAffected) {
+                        case MyTypes.Property.AttackDamage:
+                            player.subtractAttackDamage(buff.quantityToChange);
+                            break;
+                        case MyTypes.Property.HPRecoverSpeed:
+                            player.HPRecoverSpeed -= buff.quantityToChange;
+                            break;
+                        case MyTypes.Property.SPRecoverSpeed:
+                            player.SPRecoverSpeed -= buff.quantityToChange;
+                            break;
+                        case MyTypes.Property.MoveSpeed:
+                            player.subtractMoveSpeed(buff.quantityToChange);
+                            break;
+                    }
+                }
+            })
         })
     }
 
@@ -487,19 +572,19 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             if (player != SceneController.getInstance().player) return;
 
             player.addGold(eventMessage.object.gold);
-            console.log("player current gold", player.gold);
+            // console.log("player current gold", player.gold);
             // player.items, concat with eventMessage.object.items
         })
     }
 
     static getFnOnPlayerEnterTeleportPoint(player: Player): MyTypes.EventHandler {
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
-            console.log("Player. OnPlayerEnterTeleportPoint");
+            // console.log("Player. OnPlayerEnterTeleportPoint");
             if (player != SceneController.getInstance().player) return;
 
             player._canTeleport = true;
             player._curTeleportPointId = (<TeleportPoint>eventMessage.object).id;
-            console.log("Player.canTeleport = true");
+            // console.log("Player.canTeleport = true");
         })
     }
 
@@ -509,7 +594,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
             player._canTeleport = false;
             player._curTeleportPointId = undefined;
-            console.log("Player.canTeleport = false");
+            // console.log("Player.canTeleport = false");
         })
     }
 }

@@ -12,7 +12,7 @@ import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
 import { Item } from "./item";
 
-class MapBlock implements MyTypes.EventPublisher {
+export class MapBlock implements MyTypes.EventPublisher {
     /**
      * 
      * @param id 
@@ -24,7 +24,7 @@ class MapBlock implements MyTypes.EventPublisher {
         this._name = name;
         this._type = mapBlockInfo.type;
         this.initMesh({ width: mapBlockInfo.length, height: 0.2, depth: 10 }, mapBlockInfo.location);
-        if (mapBlockInfo.type & MyTypes.MapBlockType.Plain) {
+        if (mapBlockInfo.type !== MyTypes.MapBlockType.Plain) {
             this.initAttributes(mapBlockInfo.attributes);
         }
         this.initEventDetector();
@@ -56,14 +56,21 @@ class MapBlock implements MyTypes.EventPublisher {
         this._mesh.physicsImpostor = new Babylon.PhysicsImpostor(this._mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, gameScene);
         this._mesh.position = location;
 
-        if (this._type == MyTypes.MapBlockType.Plain) return;
+        let material = new Babylon.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene);
 
+        if (this._type == MyTypes.MapBlockType.Plain) {
+            material.diffuseColor = Babylon.Color3.Yellow();
+        }
+
+        // I didn't use a mixed color to represent a mixed type mapblock.
+        // Will switch to another type of material.. which can mix different colors
         if (this._type & MyTypes.MapBlockType.Trap) {
-            console.log(this._name, "is also a Trap. Currently not implemented yet..");
+            material.diffuseColor = Babylon.Color3.Red();
         }
         if (this._type & MyTypes.MapBlockType.Modifier) {
-            console.log(this._name, "is also a Trap. Currently not implemented yet..");
+            material.diffuseColor = Babylon.Color3.Blue();
         }
+        this._mesh.material = material;
     }
 
     destroyMesh(): void {
@@ -74,15 +81,19 @@ class MapBlock implements MyTypes.EventPublisher {
 
     // other attributes
     private _type: number; // Plain, Trap, Modifier, (or combination of these types, use |(or) )
+    get type(): number { return this._type; }
     private _damage: number;
-    private _modifiers: Array<Buff>;
+    get damage(): number { return this._damage; }
+    private _modifiers: Array<Buff> | undefined;
+    get modifiers(): Array<Buff> { return this._modifiers; }
 
     initAttributes(blockAttributes: MyTypes.MapBlockAttributes): void {
         if (this._type & MyTypes.MapBlockType.Trap) {
-            this._damage = blockAttributes.damagePerSecond;
+            this._damage = blockAttributes.damage;
+            console.log("a trap damage init")
         }
         if (this._type & MyTypes.MapBlockType.Modifier) {
-            this._modifiers = blockAttributes.buffs;
+            this._modifiers = blockAttributes.modifiers;
         }
     }
 
@@ -97,13 +108,30 @@ class MapBlock implements MyTypes.EventPublisher {
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
-                console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
-                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.MapBlockCollideWithPlayer, {
+                // console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
+                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEntersMapBlock, {
                     object: that,
-                    message: "MapBlock Collide With Player"
+                    message: "Player Enters a mapblock"
                 });
             })
         );
+
+        if (this._type & MyTypes.MapBlockType.Modifier) {
+            this._mesh.actionManager.registerAction(
+                new Babylon.ExecuteCodeAction({
+                    trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+                    parameter: {
+                        mesh: SceneController.getInstance().player.playerMesh,
+                        usePreciseIntersection: true
+                    }
+                }, (evt: Babylon.ActionEvent) => {
+                    EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeavesMapBlock, {
+                        object: that,
+                        message: "Player Leaves a mapblock"
+                    })
+                })
+            );
+        }
     }
 
     // static functions
@@ -155,28 +183,19 @@ export class GameMap implements MyTypes.EventSubscriber {
     }
 
     private initMapInfo(): void {
-        /* for test
-        // plain MapBlocks
-        this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, new Babylon.Vector3(15, 5, 0)));
-        this._mapInfo.push(MapBlock.getPlainMapBlockInfo(10, Babylon.Vector3.Zero()));
-
-        // Teleport Points
-        this._teleportPointInfo.push(new Babylon.Vector3(2, 0.5, 0));
-        this._teleportPointInfo.push(new Babylon.Vector3(15, 5.5, 0));
-        */
-
         // map: floor 1
-        this._mapInfo.push({
-            type: MyTypes.MapBlockType.Plain,
-            length: 25,
-            location: new Babylon.Vector3(12.5, 0, 0),
-            attributes: {}
-        }, {
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Plain,
+                length: 25,
+                location: new Babylon.Vector3(12.5, 0, 0),
+                attributes: {}
+            }, {
                 type: MyTypes.MapBlockType.Trap,
                 length: 15,
                 location: new Babylon.Vector3(32.5, 0, 0),
                 attributes: {
-                    damagePerSecond: 5
+                    damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,
@@ -188,7 +207,11 @@ export class GameMap implements MyTypes.EventSubscriber {
                 length: 15,
                 location: new Babylon.Vector3(77.5, 0, 0),
                 attributes: {
-                    // buffs: 
+                    modifiers: new Array<Buff>({
+                        type: MyTypes.BuffType.DependOnMap,
+                        propertyAffected: MyTypes.Property.MoveSpeed,
+                        quantityToChange: -0.1
+                    })
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,
@@ -198,19 +221,20 @@ export class GameMap implements MyTypes.EventSubscriber {
             });
 
         // map: floor 2
-        this._mapInfo.push({
-            type: MyTypes.MapBlockType.Trap,
-            length: 40,
-            location: new Babylon.Vector3(20, 12, 0),
-            attributes: {
-                damagePerSecond: 5
-            }
-        }, {
-                type: MyTypes.MapBlockType.Plain,
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Trap,
+                length: 40,
+                location: new Babylon.Vector3(20, 12, 0),
+                attributes: {
+                    damage: 5
+                }
+            }, {
+                type: MyTypes.MapBlockType.Trap,
                 length: 20,
                 location: new Babylon.Vector3(55, 12, 0),
                 attributes: {
-                    damagePerSecond: 5
+                    damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,
@@ -220,66 +244,109 @@ export class GameMap implements MyTypes.EventSubscriber {
             });
 
         // map: floor 3
-        this._mapInfo.push({
-            type: MyTypes.MapBlockType.Plain,
-            length: 40,
-            location: new Babylon.Vector3(20, 24, 0),
-            attributes: {}
-        }, {
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Plain,
+                length: 40,
+                location: new Babylon.Vector3(20, 24, 0),
+                attributes: {}
+            }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 25,
                 location: new Babylon.Vector3(52.5, 24, 0),
                 attributes: {}
             }, {
-                type: MyTypes.MapBlockType.Plain,
+                type: MyTypes.MapBlockType.Modifier,
                 length: 30,
                 location: new Babylon.Vector3(85, 24, 0),
-                attributes: {}
+                attributes: {
+                    modifiers: new Array<Buff>({
+                        type: MyTypes.BuffType.DependOnMap,
+                        propertyAffected: MyTypes.Property.MoveSpeed,
+                        quantityToChange: -0.1
+                    })
+                }
             });
 
         // map: floor 4
-        this._mapInfo.push({
-            type: MyTypes.MapBlockType.Modifier,
-            length: 20,
-            location: new Babylon.Vector3(10, 36, 0),
-            attributes: {
-                // buffs: 
-            }
-        }, {
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Modifier,
+                length: 20,
+                location: new Babylon.Vector3(10, 36, 0),
+                attributes: {
+                    modifiers: new Array<Buff>({
+                        type: MyTypes.BuffType.DependOnMap,
+                        propertyAffected: MyTypes.Property.MoveSpeed,
+                        quantityToChange: -0.1
+                    })
+                }
+            }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 25,
                 location: new Babylon.Vector3(32.5, 36, 0),
                 attributes: {
-                    // buffs: 
+                    modifiers: new Array<Buff>({
+                        type: MyTypes.BuffType.DependOnMap,
+                        propertyAffected: MyTypes.Property.AttackDamage,
+                        quantityToChange: 10
+                    })
                 }
             }, {
                 type: MyTypes.MapBlockType.Trap,
                 length: 20,
                 location: new Babylon.Vector3(55, 36, 0),
                 attributes: {
-                    damagePerSecond: 5
+                    damage: 5
                 }
             }, {
-                type: MyTypes.MapBlockType.Plain,
+                type: MyTypes.MapBlockType.Modifier,
                 length: 30,
                 location: new Babylon.Vector3(80, 36, 0),
-                attributes: {}
+                attributes: {
+                    modifiers: new Array<Buff>({
+                        type: MyTypes.BuffType.DependOnMap,
+                        propertyAffected: MyTypes.Property.MoveSpeed,
+                        quantityToChange: -0.1
+                    })
+                }
             });
 
         // map: floor 5
-        this._mapInfo.push({
-            type: MyTypes.MapBlockType.Modifier,
-            length: 25,
-            location: new Babylon.Vector3(17.5, 48, 0),
-            attributes: {
-                // buffs:
-            }
-        }, {
-                type: MyTypes.MapBlockType.Plain,
-                length: 25,
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Modifier,
+                length: 20,
+                location: new Babylon.Vector3(17.5, 48, 0),
+                attributes: {
+                    modifiers: new Array<Buff>(
+                        {
+                            type: MyTypes.BuffType.DependOnMap,
+                            propertyAffected: MyTypes.Property.SPRecoverSpeed,
+                            quantityToChange: 4
+                        }, {
+                            type: MyTypes.BuffType.DependOnMap,
+                            propertyAffected: MyTypes.Property.HPRecoverSpeed,
+                            quantityToChange: -4
+                        }
+                    )
+                }
+            }, {
+                type: MyTypes.MapBlockType.Modifier,
+                length: 20,
                 location: new Babylon.Vector3(47.5, 48, 0),
                 attributes: {
-                    // buffs:
+                    modifiers: new Array<Buff>(
+                        {
+                            type: MyTypes.BuffType.DependOnMap,
+                            propertyAffected: MyTypes.Property.SPRecoverSpeed,
+                            quantityToChange: -6
+                        }, {
+                            type: MyTypes.BuffType.DependOnMap,
+                            propertyAffected: MyTypes.Property.HPRecoverSpeed,
+                            quantityToChange: 4
+                        }
+                    )
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,

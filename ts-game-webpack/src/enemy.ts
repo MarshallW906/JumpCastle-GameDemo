@@ -41,7 +41,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         if (enemyInfo.isBoss != undefined) {
             this._isBoss = enemyInfo.isBoss;
         }
-        this.initProperties(Enemy.getEnemyPropertiesByEnemyType(enemyInfo.type));
+        this.initProperties(Enemy.getEnemyPropertiesByEnemyType(enemyInfo.type, this._isBoss));
         this.initMesh(enemyInfo.location);
 
         this.initEventDetector();
@@ -53,7 +53,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         this.moveSpeed = properties.moveSpeed;
         this.attackDamage = properties.attackDamage;
         this.gold = properties.gold;
-        this._size = this._isBoss ? properties.sizeIfIsBoss : properties.size;
+        this._size = properties.size;
         this.items = properties.items;
 
         this.currentDirection = MyTypes.MoveDirection.Left;
@@ -68,7 +68,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     private _size: MyTypes.EnemySize;
 
     initMesh(location: Babylon.Vector3): void {
-        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, { width: 0.5, height: 0.5, depth: 0.5 }, SceneController.getInstance().gameScene);
+        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, this._size, SceneController.getInstance().gameScene);
         this._mesh.position = location;
     }
 
@@ -113,17 +113,27 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         });
     }
 
-    static getEnemyPropertiesByEnemyType(enemyType: MyTypes.EnemyType): MyTypes.EnemyProperties {
+    static getEnemyPropertiesByEnemyType(enemyType: MyTypes.EnemyType, isBoss: boolean): MyTypes.EnemyProperties {
         switch (enemyType) {
             case MyTypes.EnemyType.NormalSolider:
-                return {
-                    maxHP: 100,
-                    moveSpeed: 0.1,
-                    attackDamage: 5,
-                    gold: 25,
-                    items: undefined,
-                    size: { width: 0.5, height: 0.5, depth: 0.5 },
-                    sizeIfIsBoss: { width: 2, height: 2, depth: 2 },
+                if (isBoss) {
+                    return {
+                        maxHP: 200,
+                        moveSpeed: 0.15,
+                        attackDamage: 10,
+                        gold: 200,
+                        items: undefined,
+                        size: { width: 3, height: 3, depth: 3 },
+                    }
+                } else {
+                    return {
+                        maxHP: 100,
+                        moveSpeed: 0.1,
+                        attackDamage: 5,
+                        gold: 25,
+                        items: undefined,
+                        size: { width: 0.5, height: 0.5, depth: 0.5 },
+                    }
                 }
             // break;
         }

@@ -164,7 +164,10 @@ export class SceneController {
 
         this._eventDispatcher.registerEventType(EventType.BulletCollideWithEnemy);
         this._eventDispatcher.registerEventType(EventType.EnemyCollideWithPlayer);
-        this._eventDispatcher.registerEventType(EventType.MapBlockCollideWithPlayer);
+
+        this._eventDispatcher.registerEventType(EventType.PlayerEntersMapBlock);
+        this._eventDispatcher.registerEventType(EventType.PlayerLeavesMapBlock);
+
         this._eventDispatcher.registerEventType(EventType.PlayerEnterTeleportPoint);
         this._eventDispatcher.registerEventType(EventType.PlayerExitTeleportPoint);
 

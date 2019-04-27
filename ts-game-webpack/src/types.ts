@@ -25,7 +25,8 @@ export enum EventType {
     PlayerLeaveAnItem,
     ItemBePurchased,
 
-    MapBlockCollideWithPlayer,
+    PlayerEntersMapBlock,
+    PlayerLeavesMapBlock,
     BulletCollideWithEnemy,
 
     PlayerEnterTeleportPoint,
@@ -140,12 +141,12 @@ export interface MapBlockAttributes {
     /**
      * applicable if the mapBlock is a trap.
      */
-    damagePerSecond?: number,
+    damage?: number,
 
     /**
      * applicable if the mapBlock is a modifier.
      */
-    buffs?: Array<Buff>;
+    modifiers?: Array<Buff>;
 }
 
 export interface MapBlockInfo {
@@ -174,5 +175,15 @@ export interface EnemyProperties {
 
     items: ItemCollection | undefined,
     size: EnemySize,
-    sizeIfIsBoss: EnemySize,
+}
+
+export enum Property {
+    HP,
+    HPRecoverSpeed,
+
+    SP,
+    SPRecoverSpeed,
+
+    AttackDamage,
+    MoveSpeed,
 }
