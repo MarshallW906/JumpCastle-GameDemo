@@ -1,4 +1,4 @@
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 // import * as Material from "@babylonjs/materials";
 
 import * as _ from "lodash";
@@ -36,8 +36,8 @@ export class MapBlock implements MyTypes.EventPublisher {
 
         // create corresponding MapBlockEdge
         let location = mapBlockInfo.location;
-        let mapBlockEdgeLeft: Babylon.Vector3 = new Babylon.Vector3(location.x + 0.5 * mapBlockInfo.length, location.y, location.z);
-        let mapBlockEdgeRight: Babylon.Vector3 = new Babylon.Vector3(location.x - 0.5 * mapBlockInfo.length, location.y, location.z);
+        let mapBlockEdgeLeft: BABYLON.Vector3 = new BABYLON.Vector3(location.x + 0.5 * mapBlockInfo.length, location.y, location.z);
+        let mapBlockEdgeRight: BABYLON.Vector3 = new BABYLON.Vector3(location.x - 0.5 * mapBlockInfo.length, location.y, location.z);
         SceneController.getInstance().mapBlockEdgeFactory.createNewMapBlockEdge(mapBlockEdgeLeft);
         SceneController.getInstance().mapBlockEdgeFactory.createNewMapBlockEdge(mapBlockEdgeRight);
     }
@@ -48,33 +48,35 @@ export class MapBlock implements MyTypes.EventPublisher {
     get name(): string { return this._name; }
     private _isVertical: boolean | undefined;
 
-    private _mesh: Babylon.Mesh;
+    private _mesh: BABYLON.Mesh;
 
     // interface ObjectWithMeshEntity
     // now initMesh might need some params, so this interface might be changed
 
-    initMesh(size: MyTypes.MapBlockSize, location: Babylon.Vector3): void {
+    initMesh(size: MyTypes.MapBlockSize, location: BABYLON.Vector3): void {
         if (location.z != 0) {
             throw Error("MapBlock location.z is not 0 !");
         }
         let gameScene = SceneController.getInstance().gameScene;
-        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, size, gameScene);
-        this._mesh.physicsImpostor = new Babylon.PhysicsImpostor(this._mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, gameScene);
+        this._mesh = BABYLON.MeshBuilder.CreateBox(this._name, size, gameScene);
+        this._mesh.physicsImpostor = new BABYLON.PhysicsImpostor(this._mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, gameScene);
         this._mesh.position = location;
 
-        let material = new Babylon.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene);
+        let material = new BABYLON.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene);
+
+        // let textureTest = 
 
         if (this._type == MyTypes.MapBlockType.Plain) {
-            material.diffuseColor = Babylon.Color3.Yellow();
+            material.diffuseColor = BABYLON.Color3.Yellow();
         }
 
         // I didn't use a mixed color to represent a mixed type mapblock.
         // Will switch to another type of material.. which can mix different colors
         if (this._type & MyTypes.MapBlockType.Trap) {
-            material.diffuseColor = Babylon.Color3.Red();
+            material.diffuseColor = BABYLON.Color3.Red();
         }
         if (this._type & MyTypes.MapBlockType.Modifier) {
-            material.diffuseColor = Babylon.Color3.Random();
+            material.diffuseColor = BABYLON.Color3.Random();
         }
         this._mesh.material = material;
     }
@@ -105,15 +107,15 @@ export class MapBlock implements MyTypes.EventPublisher {
 
     initEventDetector(): void {
         let that = this;
-        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager = new BABYLON.ActionManager(SceneController.getInstance().gameScene);
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 // console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
@@ -126,13 +128,13 @@ export class MapBlock implements MyTypes.EventPublisher {
 
         if (this._type & MyTypes.MapBlockType.Modifier) {
             this._mesh.actionManager.registerAction(
-                new Babylon.ExecuteCodeAction({
-                    trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+                new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnIntersectionExitTrigger,
                     parameter: {
                         mesh: SceneController.getInstance().player.playerMesh,
                         usePreciseIntersection: true
                     }
-                }, (evt: Babylon.ActionEvent) => {
+                }, (evt: BABYLON.ActionEvent) => {
                     if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                     EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeavesMapBlock, {
@@ -149,7 +151,7 @@ export class MapBlock implements MyTypes.EventPublisher {
     /**
      * the return type is a MapBlockInfo (interface)
      */
-    static getPlainMapBlockInfo(length: number, location: Babylon.Vector3): MyTypes.MapBlockInfo {
+    static getPlainMapBlockInfo(length: number, location: BABYLON.Vector3): MyTypes.MapBlockInfo {
         return {
             type: MyTypes.MapBlockType.Plain,
             length: length,
@@ -158,8 +160,8 @@ export class MapBlock implements MyTypes.EventPublisher {
         }
     }
 
-    static createSimpleBoxImposter(mesh: any): Babylon.PhysicsImpostor {
-        return new Babylon.PhysicsImpostor(mesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, SceneController.getInstance().gameScene);
+    static createSimpleBoxImposter(mesh: any): BABYLON.PhysicsImpostor {
+        return new BABYLON.PhysicsImpostor(mesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, SceneController.getInstance().gameScene);
     }
 }
 
@@ -168,13 +170,13 @@ export class GameMap implements MyTypes.EventSubscriber {
     private _mapBlockList: Array<MapBlock>;
     private _mapInfo: Array<MyTypes.MapBlockInfo>;
 
-    private _teleportPointInfo: Array<Babylon.Vector3>;
+    private _teleportPointInfo: Array<BABYLON.Vector3>;
     private _teleportPointsUnlocked: Array<boolean>;
     get teleportPointsUnlocked(): Array<boolean> { return this._teleportPointsUnlocked; }
     private _teleportPoints: Array<TeleportPoint>;
     get teleportPoint(): Array<TeleportPoint> { return this._teleportPoints; }
 
-    private _destinationPointLocation: Babylon.Vector3;
+    private _destinationPointLocation: BABYLON.Vector3;
     private _destinationPoint: DestinationPoint;
 
     private _itemInfo: Array<MyTypes.ItemInfo>
@@ -187,7 +189,7 @@ export class GameMap implements MyTypes.EventSubscriber {
         this._mapBlockList = new Array<MapBlock>();
         this._mapInfo = new Array<MyTypes.MapBlockInfo>();
 
-        this._teleportPointInfo = new Array<Babylon.Vector3>();
+        this._teleportPointInfo = new Array<BABYLON.Vector3>();
         this._teleportPointsUnlocked = new Array<boolean>();
         this._teleportPoints = new Array<TeleportPoint>();
 
@@ -205,24 +207,24 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Plain,
                 length: 25,
-                location: new Babylon.Vector3(12.5, 0, 0),
+                location: new BABYLON.Vector3(12.5, 0, 0),
                 attributes: {}
             }, {
                 type: MyTypes.MapBlockType.Trap,
                 length: 15,
-                location: new Babylon.Vector3(32.5, 0, 0),
+                location: new BABYLON.Vector3(32.5, 0, 0),
                 attributes: {
                     damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 30,
-                location: new Babylon.Vector3(55, 0, 0),
+                location: new BABYLON.Vector3(55, 0, 0),
                 attributes: {}
             }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 15,
-                location: new Babylon.Vector3(77.5, 0, 0),
+                location: new BABYLON.Vector3(77.5, 0, 0),
                 attributes: {
                     modifiers: new Array<Buff>({
                         type: MyTypes.BuffType.DependOnMap,
@@ -233,7 +235,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 15,
-                location: new Babylon.Vector3(92.5, 0, 0),
+                location: new BABYLON.Vector3(92.5, 0, 0),
                 attributes: {}
             });
 
@@ -242,21 +244,21 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Trap,
                 length: 40,
-                location: new Babylon.Vector3(20, 12, 0),
+                location: new BABYLON.Vector3(20, 12, 0),
                 attributes: {
                     damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Trap,
                 length: 20,
-                location: new Babylon.Vector3(55, 12, 0),
+                location: new BABYLON.Vector3(55, 12, 0),
                 attributes: {
                     damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 30,
-                location: new Babylon.Vector3(85, 12, 0),
+                location: new BABYLON.Vector3(85, 12, 0),
                 attributes: {}
             });
 
@@ -265,17 +267,17 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Plain,
                 length: 40,
-                location: new Babylon.Vector3(20, 24, 0),
+                location: new BABYLON.Vector3(20, 24, 0),
                 attributes: {}
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 25,
-                location: new Babylon.Vector3(52.5, 24, 0),
+                location: new BABYLON.Vector3(52.5, 24, 0),
                 attributes: {}
             }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 30,
-                location: new Babylon.Vector3(85, 24, 0),
+                location: new BABYLON.Vector3(85, 24, 0),
                 attributes: {
                     modifiers: new Array<Buff>({
                         type: MyTypes.BuffType.DependOnMap,
@@ -290,7 +292,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 20,
-                location: new Babylon.Vector3(10, 36, 0),
+                location: new BABYLON.Vector3(10, 36, 0),
                 attributes: {
                     modifiers: new Array<Buff>({
                         type: MyTypes.BuffType.DependOnMap,
@@ -301,7 +303,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 25,
-                location: new Babylon.Vector3(32.5, 36, 0),
+                location: new BABYLON.Vector3(32.5, 36, 0),
                 attributes: {
                     modifiers: new Array<Buff>({
                         type: MyTypes.BuffType.DependOnMap,
@@ -312,14 +314,14 @@ export class GameMap implements MyTypes.EventSubscriber {
             }, {
                 type: MyTypes.MapBlockType.Trap,
                 length: 20,
-                location: new Babylon.Vector3(55, 36, 0),
+                location: new BABYLON.Vector3(55, 36, 0),
                 attributes: {
                     damage: 5
                 }
             }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 30,
-                location: new Babylon.Vector3(80, 36, 0),
+                location: new BABYLON.Vector3(80, 36, 0),
                 attributes: {
                     modifiers: new Array<Buff>({
                         type: MyTypes.BuffType.DependOnMap,
@@ -334,7 +336,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 20,
-                location: new Babylon.Vector3(17.5, 48, 0),
+                location: new BABYLON.Vector3(17.5, 48, 0),
                 attributes: {
                     modifiers: new Array<Buff>(
                         {
@@ -351,7 +353,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             }, {
                 type: MyTypes.MapBlockType.Modifier,
                 length: 20,
-                location: new Babylon.Vector3(47.5, 48, 0),
+                location: new BABYLON.Vector3(47.5, 48, 0),
                 attributes: {
                     modifiers: new Array<Buff>(
                         {
@@ -368,7 +370,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 25,
-                location: new Babylon.Vector3(87.5, 48, 0),
+                location: new BABYLON.Vector3(87.5, 48, 0),
                 attributes: {}
             });
 
@@ -376,31 +378,31 @@ export class GameMap implements MyTypes.EventSubscriber {
             {
                 type: MyTypes.MapBlockType.Plain,
                 length: 100,
-                location: new Babylon.Vector3(50, 60, 0),
+                location: new BABYLON.Vector3(50, 60, 0),
                 attributes: {},
                 isVertical: false,
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 100,
-                location: new Babylon.Vector3(50, -1, 0),
+                location: new BABYLON.Vector3(50, -1, 0),
                 attributes: {},
                 isVertical: false,
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 60,
-                location: new Babylon.Vector3(-1, 30, 0),
+                location: new BABYLON.Vector3(-1, 30, 0),
                 attributes: {},
                 isVertical: true,
             }, {
                 type: MyTypes.MapBlockType.Plain,
                 length: 60,
-                location: new Babylon.Vector3(101, 30, 0),
+                location: new BABYLON.Vector3(101, 30, 0),
                 attributes: {},
                 isVertical: true,
             }, { // the vertical wall upside the floor 4
                 type: MyTypes.MapBlockType.Plain,
                 length: 20,
-                location: new Babylon.Vector3(67.5, 50, 0),
+                location: new BABYLON.Vector3(67.5, 50, 0),
                 attributes: {},
                 isVertical: true,
             },
@@ -408,44 +410,44 @@ export class GameMap implements MyTypes.EventSubscriber {
 
         // map: teleport points, 3 in total
         this._teleportPointInfo.push(
-            new Babylon.Vector3(12.5, 0.5, 0), // start point
-            new Babylon.Vector3(5, 24.5, 0), // floor 3 at the shop
-            new Babylon.Vector3(80, 48.5, 0), // near the destination point
+            new BABYLON.Vector3(12.5, 0.5, 0), // start point
+            new BABYLON.Vector3(5, 24.5, 0), // floor 3 at the shop
+            new BABYLON.Vector3(80, 48.5, 0), // near the destination point
         );
 
-        this._destinationPointLocation = new Babylon.Vector3(95, 55, 0);
+        this._destinationPointLocation = new BABYLON.Vector3(95, 55, 0);
     };
 
     private initItemLocations(): void {
         this._itemInfo.push(
             // floor 1
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(5, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(15, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(25, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(35, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(45, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(55, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(65, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(75, 8, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(85, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(5, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(15, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(25, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(35, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(45, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(55, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(65, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(75, 8, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(85, 8, 0)),
 
             // floor 2
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(10, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(20, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(30, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(50, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(60, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(80, 20, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(90, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(10, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(20, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(30, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(50, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(60, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(80, 20, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(90, 20, 0)),
 
             // floor 3
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(47, 32, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(54, 32, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(80, 32, 0)),
-            Item.getSoulBallItemInfo(10, new Babylon.Vector3(90, 32, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(47, 32, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(54, 32, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(80, 32, 0)),
+            Item.getSoulBallItemInfo(10, new BABYLON.Vector3(90, 32, 0)),
 
             // floor 4
-            Item.getSoulBallItemInfo(20, new Babylon.Vector3(85, 44, 0)),
+            Item.getSoulBallItemInfo(20, new BABYLON.Vector3(85, 44, 0)),
         );
 
         // other items
@@ -454,27 +456,27 @@ export class GameMap implements MyTypes.EventSubscriber {
                 type: MyTypes.ItemType.AddSpRecoverSpeed,
                 quantity: 2,
                 price: 0,
-                location: new Babylon.Vector3(95, 1, 0),
+                location: new BABYLON.Vector3(95, 1, 0),
             }, {
                 type: MyTypes.ItemType.AddAttackDamage,
                 quantity: 10,
                 price: 0,
-                location: new Babylon.Vector3(95, 13, 0),
+                location: new BABYLON.Vector3(95, 13, 0),
             }, {
                 type: MyTypes.ItemType.AddMoveSpeed,
                 quantity: 0.15,
                 price: 0,
-                location: new Babylon.Vector3(5, 13, 0),
+                location: new BABYLON.Vector3(5, 13, 0),
             }, {
                 type: MyTypes.ItemType.HPRecovery,
                 quantity: 100,
                 price: 0,
-                location: new Babylon.Vector3(5, 56, 0),
+                location: new BABYLON.Vector3(5, 56, 0),
             }, {
                 type: MyTypes.ItemType.SPRecovery,
                 quantity: 100,
                 price: 0,
-                location: new Babylon.Vector3(60, 56, 0),
+                location: new BABYLON.Vector3(60, 56, 0),
             }
         );
 
@@ -484,17 +486,17 @@ export class GameMap implements MyTypes.EventSubscriber {
                 type: MyTypes.ItemType.AddAttackDamage,
                 quantity: 10,
                 price: 100,
-                location: new Babylon.Vector3(10, 25, 0),
+                location: new BABYLON.Vector3(10, 25, 0),
             }, {
                 type: MyTypes.ItemType.AddSpRecoverSpeed,
                 quantity: 4,
                 price: 100,
-                location: new Babylon.Vector3(20, 25, 0),
+                location: new BABYLON.Vector3(20, 25, 0),
             }, {
                 type: MyTypes.ItemType.HPRecovery,
                 quantity: 50,
                 price: 100,
-                location: new Babylon.Vector3(30, 25, 0),
+                location: new BABYLON.Vector3(30, 25, 0),
             }
         )
     }
@@ -504,51 +506,51 @@ export class GameMap implements MyTypes.EventSubscriber {
             // floor 1
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(32.5, 1.5, 0),
+                location: new BABYLON.Vector3(32.5, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(50, 1.5, 0),
+                location: new BABYLON.Vector3(50, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 1.5, 0),
+                location: new BABYLON.Vector3(60, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(80, 1.5, 0),
+                location: new BABYLON.Vector3(80, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(95, 1.5, 0),
+                location: new BABYLON.Vector3(95, 1.5, 0),
             },
             // floor 2
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(20, 13.5, 0),
+                location: new BABYLON.Vector3(20, 13.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 13.5, 0),
+                location: new BABYLON.Vector3(60, 13.5, 0),
             },
             // floor 3
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(50, 25.5, 0),
+                location: new BABYLON.Vector3(50, 25.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 25.5, 0),
+                location: new BABYLON.Vector3(60, 25.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(85, 25.5, 0),
+                location: new BABYLON.Vector3(85, 25.5, 0),
             },
             // floor 4
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(80, 37.5, 0),
+                location: new BABYLON.Vector3(80, 37.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(90, 37.5, 0),
+                location: new BABYLON.Vector3(90, 37.5, 0),
             },
             // boss at floor 4
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(20, 37.5, 0),
+                location: new BABYLON.Vector3(20, 37.5, 0),
                 isBoss: true
             },
         )
@@ -574,7 +576,7 @@ export class GameMap implements MyTypes.EventSubscriber {
         this._mapBlockList.push(new MapBlock(this._mapBlockList.length, newBlockName, mapBlockInfo));
     }
 
-    private createNewTeleportPoint(location: Babylon.Vector3): void {
+    private createNewTeleportPoint(location: BABYLON.Vector3): void {
         let newTeleportPointId = this._teleportPoints.length;
         let newTeleportPointName = _.join(["TeleportPoint", newTeleportPointId], '-');
         this._teleportPoints.push(new TeleportPoint(newTeleportPointId, newTeleportPointName, location));
@@ -587,7 +589,7 @@ export class GameMap implements MyTypes.EventSubscriber {
     }
 
     private initTeleportPoints(): void {
-        this._teleportPointInfo.forEach((location: Babylon.Vector3) => {
+        this._teleportPointInfo.forEach((location: BABYLON.Vector3) => {
             this.createNewTeleportPoint(location);
         });
     }
@@ -621,26 +623,26 @@ export class GameMap implements MyTypes.EventSubscriber {
 
     test(): void {
         console.log("gamemap test");
-        let ground = Babylon.Mesh.CreateGround("ground1", 10, 10, 10, this._gameScene);
-        ground.physicsImpostor = new Babylon.PhysicsImpostor(ground, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, this._gameScene);
+        let ground = BABYLON.Mesh.CreateGround("ground1", 10, 10, 10, this._gameScene);
+        ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, this._gameScene);
 
 
-        let testground = Babylon.MeshBuilder.CreateBox("testground1", { width: 10, height: 0.2, depth: 10 }, this._gameScene);
-        testground.physicsImpostor = new Babylon.PhysicsImpostor(testground, Babylon.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, this._gameScene);
+        let testground = BABYLON.MeshBuilder.CreateBox("testground1", { width: 10, height: 0.2, depth: 10 }, this._gameScene);
+        testground.physicsImpostor = new BABYLON.PhysicsImpostor(testground, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0, restitution: 0, friction: 0 }, this._gameScene);
         testground.position.y = 5;
     }
 }
 
 class MapBlockEdge {
-    constructor(id: number, name: string, location: Babylon.Vector3) {
+    constructor(id: number, name: string, location: BABYLON.Vector3) {
         this.initMesh(id, name, location);
     }
 
-    _mesh: Babylon.Mesh;
-    get mesh(): Babylon.Mesh { return this._mesh; }
+    _mesh: BABYLON.Mesh;
+    get mesh(): BABYLON.Mesh { return this._mesh; }
 
-    initMesh(id: number, name: string, location: Babylon.Vector3) {
-        this._mesh = Babylon.MeshBuilder.CreateBox(name, { width: 1, height: 3, depth: 10 }, SceneController.getInstance().gameScene);
+    initMesh(id: number, name: string, location: BABYLON.Vector3) {
+        this._mesh = BABYLON.MeshBuilder.CreateBox(name, { width: 1, height: 3, depth: 10 }, SceneController.getInstance().gameScene);
         this._mesh.isVisible = false;
         this._mesh.position = location;
     }
@@ -656,7 +658,7 @@ export class MapBlockEdgeFactory implements MyTypes.EventPublisher {
         this.initEventDetector();
     }
 
-    createNewMapBlockEdge(location: Babylon.Vector3) {
+    createNewMapBlockEdge(location: BABYLON.Vector3) {
         let id = this._blockEdges.length;
         let name = _.join(['MapBlockEdge', id.toString()], '-');
         this._blockEdges.push(new MapBlockEdge(id, name, location));
@@ -686,7 +688,7 @@ export class MapBlockEdgeFactory implements MyTypes.EventPublisher {
 }
 
 export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
-    constructor(id: number, name: string, location: Babylon.Vector3) {
+    constructor(id: number, name: string, location: BABYLON.Vector3) {
         this._id = id;
         this._name = name;
 
@@ -699,13 +701,13 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
     private _id: number;
     get id(): number { return this._id; }
     private _name: string;
-    private _mesh: Babylon.Mesh;
-    get mesh(): Babylon.Mesh { return this._mesh; }
+    private _mesh: BABYLON.Mesh;
+    get mesh(): BABYLON.Mesh { return this._mesh; }
 
     activated: boolean;
 
-    initMesh(location: Babylon.Vector3) {
-        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, { width: 1.5, height: 1.5, depth: 5 }, SceneController.getInstance().gameScene);
+    initMesh(location: BABYLON.Vector3) {
+        this._mesh = BABYLON.MeshBuilder.CreateBox(this._name, { width: 1.5, height: 1.5, depth: 5 }, SceneController.getInstance().gameScene);
         this._mesh.position = location;
 
         // this._mesh.isVisible = false;
@@ -713,17 +715,17 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
 
     initEventDetector(): void {
         let that = this;
-        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager = new BABYLON.ActionManager(SceneController.getInstance().gameScene);
 
         // player enter teleport point
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEnterTeleportPoint, {
@@ -734,13 +736,13 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
         );
         // player exit teleport point
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionExitTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerExitTeleportPoint, {
@@ -781,7 +783,7 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
 }
 
 export class DestinationPoint implements MyTypes.EventPublisher {
-    constructor(name: string, location: Babylon.Vector3) {
+    constructor(name: string, location: BABYLON.Vector3) {
         this._name = name;
 
         this.initMesh(location);
@@ -789,30 +791,30 @@ export class DestinationPoint implements MyTypes.EventPublisher {
     }
 
     private _name: string;
-    private _mesh: Babylon.Mesh;
+    private _mesh: BABYLON.Mesh;
 
-    initMesh(location: Babylon.Vector3): void {
+    initMesh(location: BABYLON.Vector3): void {
         let gameScene = SceneController.getInstance().gameScene;
-        this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 5, gameScene);
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 5, gameScene);
         this._mesh.position = location;
 
-        let material = new Babylon.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene)
-        material.diffuseColor = Babylon.Color3.Purple();
+        let material = new BABYLON.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene)
+        material.diffuseColor = BABYLON.Color3.Purple();
         this._mesh.material = material;
     }
 
     initEventDetector(): void {
         let that = this;
         let gameScene = SceneController.getInstance().gameScene;
-        this._mesh.actionManager = new Babylon.ActionManager(gameScene);
+        this._mesh.actionManager = new BABYLON.ActionManager(gameScene);
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEnterDestinationPoint, {
@@ -822,13 +824,13 @@ export class DestinationPoint implements MyTypes.EventPublisher {
             })
         );
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionExitTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerExitDestinationPoint, {

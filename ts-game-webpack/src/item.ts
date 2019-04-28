@@ -1,4 +1,4 @@
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 import * as _ from "lodash";
 
 import * as MyTypes from './types';
@@ -16,8 +16,8 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
     private _price: number = 0;
     get price(): number { return this._price; }
 
-    private _mesh: Babylon.Mesh;
-    get mesh(): Babylon.Mesh { return this._mesh; }
+    private _mesh: BABYLON.Mesh;
+    get mesh(): BABYLON.Mesh { return this._mesh; }
 
     constructor(id: number, name: string, itemInfo: MyTypes.ItemInfo) {
         this._id = id;
@@ -31,11 +31,11 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
         this.registerEventHandler();
     }
 
-    initMesh(location: Babylon.Vector3): void {
+    initMesh(location: BABYLON.Vector3): void {
         if (location.z != 0) {
             throw Error("Item location.z is not 0 !");
         }
-        this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
         this._mesh.position = location;
         // set color ...
     }
@@ -46,15 +46,15 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
 
     initEventDetector(): void {
         let that = this;
-        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager = new BABYLON.ActionManager(SceneController.getInstance().gameScene);
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.ItemCollideWithPlayer, {
@@ -67,13 +67,13 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
         // item with a price
         if (this._price > 0) {
             this._mesh.actionManager.registerAction(
-                new Babylon.ExecuteCodeAction({
-                    trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+                new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnIntersectionExitTrigger,
                     parameter: {
                         mesh: SceneController.getInstance().player.playerMesh,
                         usePreciseIntersection: true
                     }
-                }, (evt: Babylon.ActionEvent) => {
+                }, (evt: BABYLON.ActionEvent) => {
                     if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                     EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeaveAnItem, {
@@ -87,7 +87,7 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
 
     }
 
-    static getSoulBallItemInfo(quantity: number, location: Babylon.Vector3): MyTypes.ItemInfo {
+    static getSoulBallItemInfo(quantity: number, location: BABYLON.Vector3): MyTypes.ItemInfo {
         return {
             type: MyTypes.ItemType.SoulBall,
             quantity: 10,
@@ -154,7 +154,7 @@ export class ItemFactory implements MyTypes.EventSubscriber {
             type: MyTypes.ItemType.SoulBall,
             quantity: 10,
             price: 0,
-            location: new Babylon.Vector3(15, 7, 0),
+            location: new BABYLON.Vector3(15, 7, 0),
         });
 
         // test an item which needs to be purchased
@@ -162,7 +162,7 @@ export class ItemFactory implements MyTypes.EventSubscriber {
             type: MyTypes.ItemType.HPRecovery,
             quantity: 20,
             price: 20,
-            location: new Babylon.Vector3(12, 6, 0),
+            location: new BABYLON.Vector3(12, 6, 0),
         });
     }
 

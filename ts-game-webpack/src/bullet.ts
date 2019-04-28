@@ -1,4 +1,4 @@
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 import * as _ from "lodash";
 
 import { SceneController } from "./scene";
@@ -12,14 +12,14 @@ export class Bullet implements MyTypes.EventSubscriber {
     private _damage: number;
     get damage(): number { return this._damage; }
 
-    private _mesh: Babylon.Mesh;
-    get mesh(): Babylon.Mesh { return this._mesh; }
+    private _mesh: BABYLON.Mesh;
+    get mesh(): BABYLON.Mesh { return this._mesh; }
 
     private _moveSpeed: number;
 
     private _moveDirection: MyTypes.MoveDirection;
 
-    constructor(id: number, name: string, damage: number, location: Babylon.Vector3, moveDirection: MyTypes.MoveDirection) {
+    constructor(id: number, name: string, damage: number, location: BABYLON.Vector3, moveDirection: MyTypes.MoveDirection) {
         this._id = id;
         this._name = name;
         this._damage = damage;
@@ -31,17 +31,17 @@ export class Bullet implements MyTypes.EventSubscriber {
         this.setTimerSelfDestroy();
     }
 
-    private initMesh(location: Babylon.Vector3) {
-        this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 0.3, SceneController.getInstance().gameScene);
+    private initMesh(location: BABYLON.Vector3) {
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 0.3, SceneController.getInstance().gameScene);
         // set collider
         // set color
         this._mesh.position = location;
     }
 
     animate(): void {
-        this._mesh.translate(Babylon.Axis.X,
+        this._mesh.translate(BABYLON.Axis.X,
             this._moveDirection == MyTypes.MoveDirection.Left ? this._moveSpeed : -this._moveSpeed,
-            Babylon.Space.WORLD);
+            BABYLON.Space.WORLD);
     }
 
     registerEventHandler(): void {
@@ -93,10 +93,10 @@ export class BulletFactory implements MyTypes.EventPublisher, MyTypes.EventSubsc
 
     test() {
         let player = SceneController.getInstance().player;
-        this.createNewBullet(player.attackDamage, player.playerMesh.position.add(Babylon.Vector3.Left()), MyTypes.MoveDirection.Left);
+        this.createNewBullet(player.attackDamage, player.playerMesh.position.add(BABYLON.Vector3.Left()), MyTypes.MoveDirection.Left);
     }
 
-    createNewBullet(damage: number, location: Babylon.Vector3, moveDirection: MyTypes.MoveDirection): void {
+    createNewBullet(damage: number, location: BABYLON.Vector3, moveDirection: MyTypes.MoveDirection): void {
         let newBulletId = this._bullets.length;
         let name = _.join(["Bullet", newBulletId.toString()], '-');
         this._bullets.push(new Bullet(newBulletId, name, damage, location, moveDirection));

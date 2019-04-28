@@ -1,4 +1,4 @@
-import * as Babylon from '@babylonjs/core';
+import * as BABYLON from '@babylonjs/core';
 
 import { Player } from './player';
 import { GUIController } from './gui';
@@ -26,13 +26,13 @@ export class SceneController {
     // ---------------------------------
 
     private _gameCanvas: HTMLCanvasElement;
-    private _gameEngine: Babylon.Engine;
-    private _gameScene: Babylon.Scene;
-    get gameScene(): Babylon.Scene { return this._gameScene; }
+    private _gameEngine: BABYLON.Engine;
+    private _gameScene: BABYLON.Scene;
+    get gameScene(): BABYLON.Scene { return this._gameScene; }
 
-    private _followCamera: Babylon.FollowCamera;
-    get followCamera(): Babylon.FollowCamera { return this._followCamera; }
-    private _freeCamera: Babylon.FreeCamera;
+    private _followCamera: BABYLON.FollowCamera;
+    get followCamera(): BABYLON.FollowCamera { return this._followCamera; }
+    private _freeCamera: BABYLON.FreeCamera;
 
     private _guiController: GUIController;
     get guiController(): GUIController { return this._guiController; }
@@ -103,7 +103,7 @@ export class SceneController {
         this._gameCanvas.setAttribute('height', '600');
         document.body.appendChild(this._gameCanvas);
 
-        this._gameEngine = new Babylon.Engine(this._gameCanvas);
+        this._gameEngine = new BABYLON.Engine(this._gameCanvas);
         // custom loading screen
         // let loadingScreen = new GUI.MyLoadingScreen("custom loading screen ...");
         // engine.loadingScreen = loadingScreen;
@@ -117,12 +117,12 @@ export class SceneController {
     }
 
     private initSceneAndCamera(): void {
-        this._gameScene = new Babylon.Scene(this._gameEngine);
-        let physicsPlugin = new Babylon.CannonJSPlugin();
-        let gravityVector = new Babylon.Vector3(0, -9.81, 0);
+        this._gameScene = new BABYLON.Scene(this._gameEngine);
+        let physicsPlugin = new BABYLON.CannonJSPlugin();
+        let gravityVector = new BABYLON.Vector3(0, -9.81, 0);
         this._gameScene.enablePhysics(gravityVector, physicsPlugin);
 
-        this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
+        this._followCamera = new BABYLON.FollowCamera('followCamera1', new BABYLON.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
         this._followCamera.radius = 80;
         this._followCamera.noRotationConstraint = true;
@@ -133,10 +133,10 @@ export class SceneController {
         console.log(this._followCamera.globalPosition);
         console.log(this._followCamera.rotation);
 
-        let light = new Babylon.HemisphericLight('hemisphericLight1', new Babylon.Vector3(0, 1, 0), this._gameScene);
+        let light = new BABYLON.HemisphericLight('hemisphericLight1', new BABYLON.Vector3(0, 1, 0), this._gameScene);
         light.intensity = 0.7;
 
-        this._freeCamera = new Babylon.FreeCamera("FreeCamera1", new Babylon.Vector3(100, 5, 0), this._gameScene);
+        this._freeCamera = new BABYLON.FreeCamera("FreeCamera1", new BABYLON.Vector3(100, 5, 0), this._gameScene);
         this._freeCamera.attachControl(this._gameCanvas, true);
 
         this._gameScene.activeCamera = this._freeCamera;

@@ -1,4 +1,4 @@
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 import * as Material from "@babylonjs/materials";
 // Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
 import "@babylonjs/core/Meshes/meshBuilder";
@@ -115,7 +115,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     initProperties(): void {
-        this._bornLocation = new Babylon.Vector3(3, 2, 0);
+        this._bornLocation = new BABYLON.Vector3(3, 2, 0);
 
         this._maxHP = 100;
         this._maxSP = 100;
@@ -141,25 +141,25 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     // interface ObjectWithMeshEntity
-    private _playerMesh: Babylon.Mesh;
-    get playerMesh(): Babylon.Mesh { return this._playerMesh; }
-    private _gameScene: Babylon.Scene = SceneController.getInstance().gameScene;
+    private _playerMesh: BABYLON.Mesh;
+    get playerMesh(): BABYLON.Mesh { return this._playerMesh; }
+    private _gameScene: BABYLON.Scene = SceneController.getInstance().gameScene;
 
-    private _bornLocation: Babylon.Vector3;
+    private _bornLocation: BABYLON.Vector3;
 
     initMesh(): void {
-        this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 2, this._gameScene);
+        this._playerMesh = BABYLON.Mesh.CreateBox("PlayerBox", 2, this._gameScene);
         let playerMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
-        playerMaterial.mainColor = Babylon.Color3.Blue();
-        playerMaterial.lineColor = Babylon.Color3.Black();
+        playerMaterial.mainColor = BABYLON.Color3.Blue();
+        playerMaterial.lineColor = BABYLON.Color3.Black();
         this._playerMesh.material = playerMaterial;
 
         this._playerMesh.position = this._bornLocation;
-        this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
+        this._playerMesh.physicsImpostor = new BABYLON.PhysicsImpostor(this._playerMesh, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
 
         let that = this;
         this._gameScene.registerBeforeRender(() => {
-            that.playerMesh.physicsImpostor.setAngularVelocity(Babylon.Vector3.Zero());
+            that.playerMesh.physicsImpostor.setAngularVelocity(BABYLON.Vector3.Zero());
             that.playerMesh.position.z = 0;
         })
     }
@@ -175,7 +175,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
         console.log('register keyborad inputs');
         this.keyMapStates = new Map<string, boolean>();
-        this._gameScene.actionManager = new Babylon.ActionManager(this._gameScene);
+        this._gameScene.actionManager = new BABYLON.ActionManager(this._gameScene);
 
         let that = this;
         function createKeyUpAndDownActions(keyName: string, callbackKeyDown: (evt: any) => void, callbackKeyUp: (evt: any) => void): void {
@@ -184,16 +184,16 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         }
         function createKeyUpAction(keyName: string, callback: (evt: any) => void): void {
             that._gameScene.actionManager.registerAction(
-                new Babylon.ExecuteCodeAction({
-                    trigger: Babylon.ActionManager.OnKeyUpTrigger,
+                new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnKeyUpTrigger,
                     parameter: keyName
                 }, callback)
             );
         }
         function createkeyDownAction(keyName: string, callback: (evt: any) => void): void {
             that._gameScene.actionManager.registerAction(
-                new Babylon.ExecuteCodeAction({
-                    trigger: Babylon.ActionManager.OnKeyDownTrigger,
+                new BABYLON.ExecuteCodeAction({
+                    trigger: BABYLON.ActionManager.OnKeyDownTrigger,
                     parameter: keyName
                 }, callback)
             );
@@ -303,7 +303,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     jump(): void {
         let that = this;
         function performJump(): void {
-            let velocity: Babylon.Vector3 = new Babylon.Vector3(0, 7, 0);
+            let velocity: BABYLON.Vector3 = new BABYLON.Vector3(0, 7, 0);
             if (that.keyMapStates.get('W') || that.keyMapStates.get('w')) {
                 velocity.y += 5; // 10
             }
@@ -313,11 +313,11 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             if (that.keyMapStates.get('S') || that.keyMapStates.get('s')) {
                 if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
                     // velocity.x += 3;
-                    that.playerMesh.physicsImpostor.applyImpulse(new Babylon.Vector3(10, 0, 0), that.playerMesh.getAbsolutePosition())
+                    that.playerMesh.physicsImpostor.applyImpulse(new BABYLON.Vector3(10, 0, 0), that.playerMesh.getAbsolutePosition())
                 }
                 if (that.keyMapStates.get('d') || that.keyMapStates.get('D')) {
                     // velocity.x += -3;
-                    that.playerMesh.physicsImpostor.applyImpulse(new Babylon.Vector3(-10, 0, 0), that.playerMesh.getAbsolutePosition())
+                    that.playerMesh.physicsImpostor.applyImpulse(new BABYLON.Vector3(-10, 0, 0), that.playerMesh.getAbsolutePosition())
                 }
             }
         }
@@ -361,12 +361,12 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         switch (direction) {
             case MyTypes.MoveDirection.Left:
                 // move to left
-                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.WORLD);
+                this._playerMesh.translate(BABYLON.Axis.X, this.moveSpeed, BABYLON.Space.WORLD);
                 this.currentDirection = MyTypes.MoveDirection.Left;
                 break;
             case MyTypes.MoveDirection.Right:
                 // move to right
-                this._playerMesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.WORLD);
+                this._playerMesh.translate(BABYLON.Axis.X, this.moveSpeed * -1, BABYLON.Space.WORLD);
                 this.currentDirection = MyTypes.MoveDirection.Right;
                 break;
         }

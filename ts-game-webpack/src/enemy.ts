@@ -1,4 +1,4 @@
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 import * as _ from "lodash"
 
 import * as MyTypes from "./types";
@@ -62,13 +62,13 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     private _id: number;
     get id(): number { return this._id; }
     private _name: string;
-    private _mesh: Babylon.Mesh;
-    get mesh(): Babylon.Mesh { return this._mesh; }
+    private _mesh: BABYLON.Mesh;
+    get mesh(): BABYLON.Mesh { return this._mesh; }
 
     private _size: MyTypes.EnemySize;
 
-    initMesh(location: Babylon.Vector3): void {
-        this._mesh = Babylon.MeshBuilder.CreateBox(this._name, this._size, SceneController.getInstance().gameScene);
+    initMesh(location: BABYLON.Vector3): void {
+        this._mesh = BABYLON.MeshBuilder.CreateBox(this._name, this._size, SceneController.getInstance().gameScene);
         this._mesh.position = location;
     }
 
@@ -88,11 +88,11 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         switch (direction) {
             case MyTypes.MoveDirection.Left:
                 // move to left
-                this._mesh.translate(Babylon.Axis.X, this.moveSpeed, Babylon.Space.WORLD);
+                this._mesh.translate(BABYLON.Axis.X, this.moveSpeed, BABYLON.Space.WORLD);
                 break;
             case MyTypes.MoveDirection.Right:
                 // move to right
-                this._mesh.translate(Babylon.Axis.X, this.moveSpeed * -1, Babylon.Space.WORLD);
+                this._mesh.translate(BABYLON.Axis.X, this.moveSpeed * -1, BABYLON.Space.WORLD);
                 break;
         }
     }
@@ -144,15 +144,15 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     initEventDetector(): void {
         // collide with player
         let that = this;
-        this._mesh.actionManager = new Babylon.ActionManager(SceneController.getInstance().gameScene);
+        this._mesh.actionManager = new BABYLON.ActionManager(SceneController.getInstance().gameScene);
         this._mesh.actionManager.registerAction(
-            new Babylon.ExecuteCodeAction({
-                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+            new BABYLON.ExecuteCodeAction({
+                trigger: BABYLON.ActionManager.OnIntersectionEnterTrigger,
                 parameter: {
                     mesh: SceneController.getInstance().player.playerMesh,
                     usePreciseIntersection: true
                 }
-            }, (evt: Babylon.ActionEvent) => {
+            }, (evt: BABYLON.ActionEvent) => {
                 if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
 
                 // console.log("enemy collide with player"); 
@@ -226,15 +226,15 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
     test(): void {
         this.createNewEnemy({
             type: MyTypes.EnemyType.NormalSolider,
-            location: new Babylon.Vector3(32.5, 1.5, 0),
+            location: new BABYLON.Vector3(32.5, 1.5, 0),
         });
         this.createNewEnemy({
             type: MyTypes.EnemyType.NormalSolider,
-            location: new Babylon.Vector3(80, 37.5, 0),
+            location: new BABYLON.Vector3(80, 37.5, 0),
         })
         this.createNewEnemy({
             type: MyTypes.EnemyType.NormalSolider,
-            location: new Babylon.Vector3(90, 37.5, 0),
+            location: new BABYLON.Vector3(90, 37.5, 0),
         })
     }
 

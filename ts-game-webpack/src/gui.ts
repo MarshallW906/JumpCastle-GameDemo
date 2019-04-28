@@ -1,5 +1,5 @@
 import * as BabylonGUI from "@babylonjs/gui";
-import * as Babylon from "@babylonjs/core";
+import * as BABYLON from "@babylonjs/core";
 import * as _ from "lodash";
 
 import * as MyTypes from './types';
@@ -481,7 +481,7 @@ export class GUIController implements MyTypes.EventSubscriber {
 
 
 // loading scene test
-export class MyLoadingScreen implements Babylon.ILoadingScreen {
+export class MyLoadingScreen implements BABYLON.ILoadingScreen {
     //optional, but needed due to interface definitions
     public loadingUIBackgroundColor: string;
     constructor(public loadingUIText: string) { }
