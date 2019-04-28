@@ -9,6 +9,10 @@ import { BulletFactory } from './bullet';
 import { EventType, GameStatus } from './types';
 import { EnemyFactory } from './enemy';
 
+import * as BJSPT from "@babylonjs/procedural-textures";
+// Required side effects to populate the Create methods on the mesh class. Without this, the bundle would be smaller but the createXXX methods from mesh would not be accessible.
+import "@babylonjs/core/Meshes/meshBuilder";
+
 export class SceneController {
     // -----------singleton-------------
     private static _instance: SceneController = new SceneController();
@@ -54,6 +58,8 @@ export class SceneController {
 
     gameStatus: GameStatus;
 
+    private testCamera: BABYLON.Camera;
+
     initAll(): void {
         // canvas, engine, scene
         this.initCanvasAndEngine();
@@ -63,12 +69,34 @@ export class SceneController {
 
         this.initGUI();
 
+        // this.testCamera = new BABYLON.ArcRotateCamera("Camera", -2, Math.PI / 2, 12, new BABYLON.Vector3(-5, 0, -10), this._gameScene);
+        // this.testCamera.attachControl(this._gameCanvas, true);
+        // this._gameScene.activeCamera = this.testCamera;
+
+        // var brickMaterial = new BABYLON.StandardMaterial(name, this._gameScene);
+        // var brickTexture = new BJSPT.BrickProceduralTexture(name + "text", 512, this._gameScene);
+        // brickTexture.numberOfBricksHeight = 6;
+        // brickTexture.numberOfBricksWidth = 10;
+        // brickMaterial.diffuseTexture = brickTexture;
+
+        // var plane = BABYLON.Mesh.CreatePlane("brickPlane", 50, this._gameScene);
+        // plane.material = brickMaterial;
+
         this.initPlayer(); // also registered keyboard inputs
         this.initMap();
 
         this.initItemFactory();
         this.initEnemyFactory();
         this.initBulletFactory();
+
+        this._gameScene.activeCamera = this._followCamera;
+        this.gameStatus = GameStatus.GameRuntime;
+
+        this.gameStart();
+
+        this._gameEngine.runRenderLoop(() => {
+            this._gameScene.render();
+        });
     }
 
     gameStart(): void {
@@ -104,15 +132,8 @@ export class SceneController {
         document.body.appendChild(this._gameCanvas);
 
         this._gameEngine = new BABYLON.Engine(this._gameCanvas);
-        // custom loading screen
-        // let loadingScreen = new GUI.MyLoadingScreen("custom loading screen ...");
-        // engine.loadingScreen = loadingScreen;
         window.addEventListener("resize", () => {
             this._gameEngine.resize();
-        });
-
-        this._gameEngine.runRenderLoop(() => {
-            this._gameScene.render();
         });
     }
 

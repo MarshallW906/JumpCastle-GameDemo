@@ -10,7 +10,7 @@ module.exports = {
     devtool: 'inline-source-map',
     devServer: {
         contentBase: './dist',
-        hot: true
+        hot: true,
     },
     module: {
         rules: [{
@@ -22,6 +22,11 @@ module.exports = {
             use: [
                 'style-loader',
                 'css-loader'
+            ]
+        }, {
+            test: /\.(png|svg|jpg|gif)$/,
+            use: [
+                'file-loader?name=/resources/[name].[ext]"'
             ]
         }]
     },
@@ -45,6 +50,6 @@ module.exports = {
     },
     output: {
         filename: '[name].bundle.js',
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, 'dist'),
     },
 };

@@ -24,7 +24,7 @@ export class Bullet implements MyTypes.EventSubscriber {
         this._name = name;
         this._damage = damage;
         this._moveDirection = moveDirection
-        this._moveSpeed = 0.8;
+        this._moveSpeed = 0.5;
 
         this.initMesh(location);
         this.registerEventHandler();
@@ -32,10 +32,14 @@ export class Bullet implements MyTypes.EventSubscriber {
     }
 
     private initMesh(location: BABYLON.Vector3) {
-        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 0.3, SceneController.getInstance().gameScene);
-        // set collider
-        // set color
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 0.5, gameScene);
         this._mesh.position = location;
+
+        let material = new BABYLON.StandardMaterial(_.join(['Bullet', 'Material', this._id.toString()], '-'), gameScene);
+        material.diffuseColor = BABYLON.Color3.Magenta();
+
+        this._mesh.material = material;
     }
 
     animate(): void {

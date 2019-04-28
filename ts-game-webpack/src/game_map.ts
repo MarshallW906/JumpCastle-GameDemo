@@ -1,5 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
 // import * as Material from "@babylonjs/materials";
+import * as BabylonProceduralTexture from "@babylonjs/procedural-textures";
 
 import * as _ from "lodash";
 
@@ -64,19 +65,28 @@ export class MapBlock implements MyTypes.EventPublisher {
 
         let material = new BABYLON.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene);
 
-        // let textureTest = 
-
         if (this._type == MyTypes.MapBlockType.Plain) {
             material.diffuseColor = BABYLON.Color3.Yellow();
+
+            let brickTexture = new BabylonProceduralTexture.BrickProceduralTexture(_.join(["BrickTexture", this._name], '-'), 32, gameScene);
+            brickTexture.numberOfBricksWidth = 6;
+            brickTexture.numberOfBricksHeight = 10;
+            material.diffuseTexture = brickTexture;
         }
 
         // I didn't use a mixed color to represent a mixed type mapblock.
         // Will switch to another type of material.. which can mix different colors
         if (this._type & MyTypes.MapBlockType.Trap) {
             material.diffuseColor = BABYLON.Color3.Red();
+            let fireTexture = new BabylonProceduralTexture.FireProceduralTexture(_.join(["FireTexture", this._name], '-'), 32, gameScene);
+            // fireTexture.fireColors = BABYLON.Color3.Red();
+            material.diffuseTexture = fireTexture;
         }
         if (this._type & MyTypes.MapBlockType.Modifier) {
             material.diffuseColor = BABYLON.Color3.Random();
+
+            let modifireTexture = new BabylonProceduralTexture.MarbleProceduralTexture(_.join(["MarbleTexture", this._name], '-'), 32, gameScene);
+            material.diffuseTexture = modifireTexture;
         }
         this._mesh.material = material;
     }

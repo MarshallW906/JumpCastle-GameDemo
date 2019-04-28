@@ -1,4 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
+import * as BabylonProceduralTexture from "@babylonjs/procedural-textures";
+
 import * as _ from "lodash";
 
 import * as MyTypes from './types';
@@ -35,9 +37,44 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
         if (location.z != 0) {
             throw Error("Item location.z is not 0 !");
         }
-        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
+
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 1, gameScene);
         this._mesh.position = location;
-        // set color ...
+
+        let material = new BABYLON.StandardMaterial(_.join(["standard", "material", "item", this._id.toString()], '-'), gameScene);
+
+        switch (this._type) {
+            case MyTypes.ItemType.SoulBall:
+                material.diffuseColor = new BABYLON.Color3(0, 238, 238);
+                break;
+            case MyTypes.ItemType.HPRecovery:
+                material.diffuseColor = BABYLON.Color3.Red();
+                break;
+            case MyTypes.ItemType.SPRecovery:
+                material.diffuseColor = new BABYLON.Color3(106, 90, 205);
+                break;
+            case MyTypes.ItemType.AddAttackDamage:
+                material.diffuseColor = new BABYLON.Color3(192, 192, 192);
+                break;
+            case MyTypes.ItemType.AddMoveSpeed:
+                material.diffuseColor = new BABYLON.Color3(238, 130, 238);
+                break;
+            case MyTypes.ItemType.AddSpRecoverSpeed:
+                material.diffuseColor = BABYLON.Color3.Green();
+                break;
+        }
+
+        let texture = new BabylonProceduralTexture.CloudProceduralTexture(_.join(["Item", "Texture", "Cloud", this._name.toString()], '-'), 32, gameScene);
+        material.diffuseTexture = texture;
+        this._mesh.material = material;
+
+        if (this._type == MyTypes.ItemType.SoulBall) {
+            // add a lightblue particle
+        }
+        if (this._price > 0) {
+            // add a gold particle
+        }
     }
 
     destroyMesh(): void {
