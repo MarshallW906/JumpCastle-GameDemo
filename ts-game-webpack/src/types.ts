@@ -154,6 +154,7 @@ export interface MapBlockInfo {
     length: number;
     location: Vector3;
     attributes?: MapBlockAttributes;
+    isVertical?: boolean;
 }
 
 // Enemy

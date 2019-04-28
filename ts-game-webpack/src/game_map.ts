@@ -23,7 +23,12 @@ export class MapBlock implements MyTypes.EventPublisher {
         this._id = id;
         this._name = name;
         this._type = mapBlockInfo.type;
-        this.initMesh({ width: mapBlockInfo.length, height: 0.2, depth: 10 }, mapBlockInfo.location);
+        this._isVertical = mapBlockInfo.isVertical;
+        if (this._isVertical !== undefined && this._isVertical == true) {
+            this.initMesh({ width: 2.5, height: mapBlockInfo.length, depth: 10 }, mapBlockInfo.location)
+        } else {
+            this.initMesh({ width: mapBlockInfo.length, height: 1, depth: 10 }, mapBlockInfo.location);
+        }
         if (mapBlockInfo.type !== MyTypes.MapBlockType.Plain) {
             this.initAttributes(mapBlockInfo.attributes);
         }
@@ -41,6 +46,7 @@ export class MapBlock implements MyTypes.EventPublisher {
     get id(): number { return this._id; }
     private _name: string;
     get name(): string { return this._name; }
+    private _isVertical: boolean | undefined;
 
     private _mesh: Babylon.Mesh;
 
@@ -353,7 +359,41 @@ export class GameMap implements MyTypes.EventSubscriber {
                 length: 25,
                 location: new Babylon.Vector3(87.5, 48, 0),
                 attributes: {}
-            })
+            });
+
+        this._mapInfo.push(
+            {
+                type: MyTypes.MapBlockType.Plain,
+                length: 100,
+                location: new Babylon.Vector3(50, 60, 0),
+                attributes: {},
+                isVertical: false,
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 100,
+                location: new Babylon.Vector3(50, -1, 0),
+                attributes: {},
+                isVertical: false,
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 60,
+                location: new Babylon.Vector3(-1, 30, 0),
+                attributes: {},
+                isVertical: true,
+            }, {
+                type: MyTypes.MapBlockType.Plain,
+                length: 60,
+                location: new Babylon.Vector3(101, 30, 0),
+                attributes: {},
+                isVertical: true,
+            }, { // the vertical wall upside the floor 4
+                type: MyTypes.MapBlockType.Plain,
+                length: 20,
+                location: new Babylon.Vector3(67.5, 50, 0),
+                attributes: {},
+                isVertical: true,
+            },
+        );
 
         // map: teleport points, 3 in total
         this._teleportPointInfo.push(
@@ -452,51 +492,51 @@ export class GameMap implements MyTypes.EventSubscriber {
             // floor 1
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(32.5, 0.5, 0),
+                location: new Babylon.Vector3(32.5, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(50, 0.5, 0),
+                location: new Babylon.Vector3(50, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 0.5, 0),
+                location: new Babylon.Vector3(60, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(80, 0.5, 0),
+                location: new Babylon.Vector3(80, 1.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(95, 0.5, 0),
+                location: new Babylon.Vector3(95, 1.5, 0),
             },
             // floor 2
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(20, 12.5, 0),
+                location: new Babylon.Vector3(20, 13.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 12.5, 0),
+                location: new Babylon.Vector3(60, 13.5, 0),
             },
             // floor 3
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(50, 24.5, 0),
+                location: new Babylon.Vector3(50, 25.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(60, 24.5, 0),
+                location: new Babylon.Vector3(60, 25.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(85, 24.5, 0),
+                location: new Babylon.Vector3(85, 25.5, 0),
             },
             // floor 4
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(80, 36.5, 0),
+                location: new Babylon.Vector3(80, 37.5, 0),
             }, {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(90, 36.5, 0),
+                location: new Babylon.Vector3(90, 37.5, 0),
             },
             // boss at floor 4
             {
                 type: MyTypes.EnemyType.NormalSolider,
-                location: new Babylon.Vector3(20, 36.5, 0),
+                location: new Babylon.Vector3(20, 37.5, 0),
                 isBoss: true
             },
         )

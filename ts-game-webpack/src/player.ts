@@ -140,16 +140,16 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     // interface ObjectWithMeshEntity
     private _playerMesh: Babylon.Mesh;
     get playerMesh(): Babylon.Mesh { return this._playerMesh; }
-    private normalGridMaterial: any;
     private _gameScene: Babylon.Scene = SceneController.getInstance().gameScene;
 
     initMesh(): void {
-        // this._playerMesh = Babylon.MeshBuilder.CreateSphere("Player", {}, this._gameScene);
-        // this.normalGridMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
-        // this._playerMesh.material = this.normalGridMaterial;
-        // this._playerMesh = Babylon.Mesh.CreateSphere("PlayerSphere", 8, 2, this._gameScene);
-        this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 1, this._gameScene);
-        this._playerMesh.position.y = 3;
+        this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 2, this._gameScene);
+        let playerMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
+        playerMaterial.mainColor = Babylon.Color3.Blue();
+        playerMaterial.lineColor = Babylon.Color3.Black();
+        this._playerMesh.material = playerMaterial;
+
+        this._playerMesh.position = new Babylon.Vector3(3, 2, 0);
         this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
 
         let that = this;

@@ -132,7 +132,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
                         attackDamage: 5,
                         gold: 25,
                         items: undefined,
-                        size: { width: 0.5, height: 0.5, depth: 0.5 },
+                        size: { width: 1.5, height: 1.5, depth: 1.5 },
                     }
                 }
             // break;
@@ -187,6 +187,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (enemy == undefined) return;
             if (enemy.id == eventMessage.object.id) {
+                console.log("Enemy change direction")
                 enemy.currentDirection = enemy.currentDirection == MyTypes.MoveDirection.Left ?
                     MyTypes.MoveDirection.Right : MyTypes.MoveDirection.Left;
             }
@@ -209,7 +210,18 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
     }
 
     test(): void {
-        // this.createNewEnemy(new Babylon.Vector3(-4, 0.5, 0));
+        this.createNewEnemy({
+            type: MyTypes.EnemyType.NormalSolider,
+            location: new Babylon.Vector3(32.5, 1.5, 0),
+        });
+        this.createNewEnemy({
+            type: MyTypes.EnemyType.NormalSolider,
+            location: new Babylon.Vector3(80, 37.5, 0),
+        })
+        this.createNewEnemy({
+            type: MyTypes.EnemyType.NormalSolider,
+            location: new Babylon.Vector3(90, 37.5, 0),
+        })
     }
 
     createNewEnemy(enemyInfo: MyTypes.EnemyInfo) {
