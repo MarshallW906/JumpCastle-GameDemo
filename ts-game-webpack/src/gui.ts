@@ -8,9 +8,6 @@ import { EventDispatcher } from "./event_dispatcher";
 
 /**
  * GUI may use another camera, which only captures the GUI elements.
- * But currently I don't know how to do it.
- * Some warnings emerged when enable the panels.
- * needs checks.
  */
 export class GUIController implements MyTypes.EventSubscriber {
     // -----------singleton-------------
@@ -50,8 +47,6 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.initItemList();
         this.initBuffList();
 
-        this.initPanelGameOver();
-        this.initPanelWin();
         this.initGUIElementsGameRuntime();
 
         this.composeGUItest();
@@ -73,19 +68,12 @@ export class GUIController implements MyTypes.EventSubscriber {
         // this.advancedTexture.addControl(this.logoGameTitle);
         this.advancedTexture.addControl(this.buttonMute);
 
-        this.panelGameOver.addControl(this.textblockGameOver);
-
-        this.panelWin.addControl(this.textblockWin);
-
         this.guiElementsGameRuntime.forEach((guiElement) => {
             if (guiElement !== undefined) {
                 this.advancedTexture.addControl(<BabylonGUI.Control>guiElement);
             }
         });
 
-
-        this.advancedTexture.addControl(this.panelWin);
-        this.advancedTexture.addControl(this.panelGameOver);
     }
 
 
@@ -94,16 +82,15 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.currentGUIMode = MyTypes.GUIMode.Loading;
 
         // display loading GUI
-        // this.progressBarLoading.isVisible = true;
-        this.logoGameTitle.isVisible = true;
+        // this.advancedTexture.addControl(this.progressBarLoading);
+        this.advancedTexture.addControl(this.logoGameTitle)
     }
     Title(): void {
         this.hideCurrentGUI();
         this.currentGUIMode = MyTypes.GUIMode.Title;
 
         // display Title GUI
-        this.logoGameTitle.isVisible = true;
-        this.buttonStart.isVisible = true;
+        this.advancedTexture.addControl(this.logoGameTitle);
         this.advancedTexture.addControl(this.buttonStart);
     }
     GameRuntime(): void {
@@ -113,33 +100,57 @@ export class GUIController implements MyTypes.EventSubscriber {
         // display GameRuntime GUI
         this.guiElementsGameRuntime.forEach((guiElement) => {
             if (guiElement !== undefined) {
-                guiElement.isVisible = true;
+                this.advancedTexture.addControl(guiElement);
             }
         })
     }
     GameOver(): void {
         // no need to hideGUI()
-        // this.hideCurrentGUI();
+        this.hideCurrentGUI();
         this.currentGUIMode = MyTypes.GUIMode.GameOver;
 
         // display GameOver GUI
-        this.panelGameOver.isVisible = true;
-        this.buttonReturnToTitle.isVisible = true;
-        this.buttonRestart.isVisible = true;
+        this.advancedTexture.addControl(this.textblockGameOver);
+        this.advancedTexture.addControl(this.buttonReturnToTitle);
+        this.advancedTexture.addControl(this.buttonRestart);
     }
     Win(): void {
         // no need to hideGUI()
-        // this.hideCurrentGUI();
+        this.hideCurrentGUI();
         this.currentGUIMode = MyTypes.GUIMode.Win;
 
         // display Win GUI
-        this.panelWin.isVisible = true;
-        this.buttonReturnToTitle.isVisible = true;
-        this.buttonRestart.isVisible = true;
+        this.advancedTexture.addControl(this.textblockWin);
+        this.advancedTexture.addControl(this.buttonReturnToTitle);
+        this.advancedTexture.addControl(this.buttonRestart);
     }
 
     HideAll(): void {
         this.hideCurrentGUI();
+    }
+
+    // Loading, Title, GameRuntime, GameOver, Win
+    private currentGUIMode: MyTypes.GUIMode = MyTypes.GUIMode.HideAll;
+    private hideCurrentGUI() {
+        // hide all buttons, text labels, logos except ButtonMute(never needs to be hidden)
+
+        this.advancedTexture.removeControl(this.logoGameTitle);
+
+        this.advancedTexture.removeControl(this.textblockGameOver);
+        this.advancedTexture.removeControl(this.textblockWin);
+
+        this.guiElementsGameRuntime.forEach((guiElement: any) => {
+            if (guiElement !== undefined) {
+                this.advancedTexture.removeControl(guiElement);
+            }
+        })
+
+        this.advancedTexture.removeControl(this.buttonStart);
+        this.advancedTexture.removeControl(this.buttonRestart);
+        this.advancedTexture.removeControl(this.buttonReturnToTitle);
+
+        // set currentGUIMode to "HideAll"
+        this.currentGUIMode = MyTypes.GUIMode.HideAll;
     }
 
     TestGUI(): void {
@@ -163,6 +174,23 @@ export class GUIController implements MyTypes.EventSubscriber {
         createTestButton("ShowCameraPosition", "C", '200px', '20px', () => {
             console.log("camera global position", SceneController.getInstance().followCamera.globalPosition);
         });
+
+        createTestButton("ShowGameWinPanel", "T", '240px', '-40px', () => {
+            that.Title();
+        });
+        createTestButton("ShowGameWinPanel", "R", '240px', '-20px', () => {
+            that.GameRuntime();
+        });
+        createTestButton("ShowGameWinPanel", "W", '240px', '0', () => {
+            that.Win();
+        });
+        createTestButton("ShowGameWinPanel", "O", '240px', '20px', () => {
+            that.GameOver();
+        });
+        createTestButton("ShowGameWinPanel", "H", '240px', '40px', () => {
+            that.HideAll();
+        });
+
     }
 
     UpdateHPBar(curHP: number): void {
@@ -180,30 +208,6 @@ export class GUIController implements MyTypes.EventSubscriber {
     UpdateItemList(curItemList: MyTypes.ItemCollection): void { }
 
     UpdateBuffList(curBuffList: any): void { }
-
-    // Loading, Title, GameRuntime, GameOver, Win
-    private currentGUIMode: MyTypes.GUIMode = MyTypes.GUIMode.HideAll;
-    private hideCurrentGUI() {
-        // hide all buttons, text labels, logos except ButtonMute(never needs to be hidden)
-
-        this.logoGameTitle.isVisible = false;
-        // this.progressBarLoading.isVisible = false;
-        this.panelGameOver.isVisible = false; // textblockGameOver
-        this.panelWin.isVisible = false;      // textblockWin
-
-        this.guiElementsGameRuntime.forEach((guiElement: any) => {
-            if (guiElement !== undefined) {
-                guiElement.isVisible = false;
-            }
-        })
-
-        this.buttonStart.isVisible = false;
-        this.buttonRestart.isVisible = false;
-        this.buttonReturnToTitle.isVisible = false;
-
-        // set currentGUIMode to "HideAll"
-        this.currentGUIMode = MyTypes.GUIMode.HideAll;
-    }
 
     // GUI 
     private advancedTexture: BabylonGUI.AdvancedDynamicTexture;
@@ -223,7 +227,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonStart.onPointerUpObservable.add(this.onClickedButtonStart)
         // this.buttonStart.left = '0';
         this.buttonStart.top = '100';
-        this.buttonStart.isVisible = true;
+        // this.buttonStart.isVisible = true;
     }
     private initButtonRestart(): void {
         this.buttonRestart = BabylonGUI.Button.CreateSimpleButton("Restart", "Restart");
@@ -235,7 +239,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonRestart.onPointerUpObservable.add(this.onClickedButtonRestart);
         // this.buttonRetart.left = '0';
         this.buttonRestart.top = '150px';
-        this.buttonRestart.isVisible = true;
+        // this.buttonRestart.isVisible = true;
     }
     private initButtonMute(): void {
         this.buttonMute = BabylonGUI.Button.CreateSimpleButton("Mute/UnMute", "M");
@@ -245,9 +249,10 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonMute.color = 'black';
         this.buttonMute.background = 'yellow';
         this.buttonMute.onPointerUpObservable.add(this.onClickedButtonMute);
-        this.buttonMute.left = '300px';
-        this.buttonMute.top = '-200px';
-        this.buttonMute.isVisible = true;
+        this.buttonMute.left = '350px';
+        this.buttonMute.top = '-260px';
+        this.buttonMute.zIndex = -1;
+        // this.buttonMute.isVisible = true;
     }
     private initButtonReturnToTitle(): void {
         this.buttonReturnToTitle = BabylonGUI.Button.CreateSimpleButton("ReturnToTitle", "Return To Title");
@@ -259,7 +264,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonReturnToTitle.onPointerUpObservable.add(this.onClickedButtonReturnToTitle);
         // this.buttonReturnToTitle.left = '0';
         this.buttonReturnToTitle.top = '200px';
-        this.buttonReturnToTitle.isVisible = true;
+        // this.buttonReturnToTitle.isVisible = true;
     }
 
     private textblockGameOver: BabylonGUI.TextBlock; // maybe BabylonGUI.TextBlock
@@ -269,17 +274,23 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.textblockGameOver = new BabylonGUI.TextBlock();
         this.textblockGameOver.text = 'Game Over';
         this.textblockGameOver.color = 'white';
-        this.textblockGameOver.fontSize = 24;
-        // this.textblockGameOver.top = '-150px';
+        this.textblockGameOver.fontSize = 40;
+        this.textblockGameOver.width = '300px';
+        this.textblockGameOver.height = '200px';
+        this.textblockGameOver.top = '-150px';
         // this.textblockGameOver.left = '20px';
+        this.textblockGameOver.zIndex = -1;
 
     }
     private initTextblockWin(): void {
         this.textblockWin = new BabylonGUI.TextBlock();
         this.textblockWin.text = 'Win';
-        this.textblockWin.color = 'black';
-        this.textblockWin.fontSize = 24;
-        this.textblockWin.top = '-100px';
+        this.textblockWin.color = 'white';
+        this.textblockWin.fontSize = 40;
+        this.textblockWin.top = '-150px';
+        this.textblockWin.width = '200px';
+        this.textblockWin.height = '200px';
+        this.textblockWin.zIndex = -1;
     }
 
     private progressBarLoading: any; // progressBar?
@@ -351,23 +362,8 @@ export class GUIController implements MyTypes.EventSubscriber {
     private initItemList(): void { }
     private initBuffList(): void { }
 
-    private panelGameOver: any; // maybe something like a panel
-    private panelWin: any; // same as panelGameOver
     private guiElementsGameRuntime: Array<any>; // same as above
-    private initPanelGameOver(): void {
-        this.panelGameOver = new BabylonGUI.StackPanel("GameOver");
-        this.panelGameOver.background = 'red';
-        this.panelGameOver.left = '20%';
-        this.panelGameOver.width = '30%';
-        this.panelGameOver.height = '40%';
-    }
-    private initPanelWin(): void {
-        this.panelWin = new BabylonGUI.StackPanel("Win");
-        this.panelWin.background = 'red';
-        this.panelWin.left = '-20%';
-        this.panelWin.width = '30%';
-        this.panelWin.height = '40%';
-    }
+
     private initGUIElementsGameRuntime(): void {
         this.guiElementsGameRuntime = new Array<BabylonGUI.Control>();
         this.guiElementsGameRuntime.push(
