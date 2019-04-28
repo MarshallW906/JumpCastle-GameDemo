@@ -171,6 +171,9 @@ export class SceneController {
         this._eventDispatcher.registerEventType(EventType.PlayerEnterTeleportPoint);
         this._eventDispatcher.registerEventType(EventType.PlayerExitTeleportPoint);
 
+        this._eventDispatcher.registerEventType(EventType.PlayerEnterDestinationPoint);
+        this._eventDispatcher.registerEventType(EventType.PlayerExitDestinationPoint);
+
         this._eventDispatcher.registerEventType(EventType.EnemyDead);
         this._eventDispatcher.registerEventType(EventType.GUIQuantityChange);
         this._eventDispatcher.registerEventType(EventType.EnemyReachesMapBlockEdge);

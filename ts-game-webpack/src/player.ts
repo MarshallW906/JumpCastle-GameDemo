@@ -446,6 +446,14 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         // now implemented
     }
 
+    onGameWin(): void {
+        console.log("Game win........")
+    }
+
+    popUpSoulNotEnoughReminder(): void {
+        console.log("Your have not collected enough soul! Get back and collect them all!")
+    }
+
     sendGUIQuantityChangeEvent(propertyToChange: string, newValue: any): void {
         EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.GUIQuantityChange, {
             object: newValue,
@@ -464,6 +472,9 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
 
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerEnterTeleportPoint, Player.getFnOnPlayerEnterTeleportPoint(this));
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerExitTeleportPoint, Player.getFnOnPlayerExitTeleportPoint(this));
+
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerEnterDestinationPoint, Player.getFnOnPlayerEnterDestinationPoint(this));
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerExitDestinationPoint, Player.getFnOnPlayerExitDestinationPoint(this));
     }
 
     // event handler
@@ -596,5 +607,24 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
             player._curTeleportPointId = undefined;
             // console.log("Player.canTeleport = false");
         })
+    }
+
+    static getFnOnPlayerEnterDestinationPoint(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+            if (player.soul >= 150) {
+                player.onGameWin();
+            } else {
+                player.popUpSoulNotEnoughReminder();
+            }
+        });
+    }
+
+    static getFnOnPlayerExitDestinationPoint(player: Player): MyTypes.EventHandler {
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            if (player != SceneController.getInstance().player) return;
+
+        });
     }
 }

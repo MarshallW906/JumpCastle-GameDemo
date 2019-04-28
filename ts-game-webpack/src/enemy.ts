@@ -187,7 +187,7 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
         return (eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             if (enemy == undefined) return;
             if (enemy.id == eventMessage.object.id) {
-                console.log("Enemy change direction")
+                // console.log("Enemy change direction")
                 enemy.currentDirection = enemy.currentDirection == MyTypes.MoveDirection.Left ?
                     MyTypes.MoveDirection.Right : MyTypes.MoveDirection.Left;
             }

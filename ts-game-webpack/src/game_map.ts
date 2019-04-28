@@ -11,6 +11,7 @@ import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
 import { Item } from "./item";
+import { InstancedLinesMesh, SceneOptimization } from "@babylonjs/core";
 
 export class MapBlock implements MyTypes.EventPublisher {
     /**
@@ -164,17 +165,20 @@ export class GameMap implements MyTypes.EventSubscriber {
     private _mapBlockList: Array<MapBlock>;
     private _mapInfo: Array<MyTypes.MapBlockInfo>;
 
-
     private _teleportPointInfo: Array<Babylon.Vector3>;
     private _teleportPointsUnlocked: Array<boolean>;
     get teleportPointsUnlocked(): Array<boolean> { return this._teleportPointsUnlocked; }
     private _teleportPoints: Array<TeleportPoint>;
     get teleportPoint(): Array<TeleportPoint> { return this._teleportPoints; }
+
+    private _destinationPointLocation: Babylon.Vector3;
+    private _destinationPoint: DestinationPoint;
+
     private _itemInfo: Array<MyTypes.ItemInfo>
     get itemInfo(): Array<MyTypes.ItemInfo> { return this._itemInfo; }
     private _enemyInfoArray: Array<MyTypes.EnemyInfo>;
     get enemyInfoArray(): Array<MyTypes.EnemyInfo> { return this._enemyInfoArray; }
-    // private _bossEnemyInfo:
+
 
     constructor() {
         this._mapBlockList = new Array<MapBlock>();
@@ -402,6 +406,7 @@ export class GameMap implements MyTypes.EventSubscriber {
             new Babylon.Vector3(80, 48.5, 0), // near the destination point
         );
 
+        this._destinationPointLocation = new Babylon.Vector3(95, 55, 0);
     };
 
     private initItemLocations(): void {
@@ -580,10 +585,15 @@ export class GameMap implements MyTypes.EventSubscriber {
         });
     }
 
+    createDestinationPoint(): void {
+        this._destinationPoint = new DestinationPoint("DestinationPoint", this._destinationPointLocation);
+    }
+
     initMap(): void {
         this.initMapInfo();
         this.initCurrentMapBlocks();
         this.initTeleportPoints();
+        this.createDestinationPoint();
 
         this.initItemLocations();
         this.initEnemyInfoArray();
@@ -754,5 +764,61 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
                 // maybe a color change
             }
         }
+    }
+}
+
+export class DestinationPoint implements MyTypes.EventPublisher {
+    constructor(name: string, location: Babylon.Vector3) {
+        this._name = name;
+
+        this.initMesh(location);
+        this.initEventDetector();
+    }
+
+    private _name: string;
+    private _mesh: Babylon.Mesh;
+
+    initMesh(location: Babylon.Vector3): void {
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = Babylon.Mesh.CreateSphere(this._name, 16, 5, gameScene);
+        this._mesh.position = location;
+
+        let material = new Babylon.StandardMaterial(_.join([this._name, "Material"], '-'), gameScene)
+        material.diffuseColor = Babylon.Color3.Purple();
+        this._mesh.material = material;
+    }
+
+    initEventDetector(): void {
+        let that = this;
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh.actionManager = new Babylon.ActionManager(gameScene);
+        this._mesh.actionManager.registerAction(
+            new Babylon.ExecuteCodeAction({
+                trigger: Babylon.ActionManager.OnIntersectionEnterTrigger,
+                parameter: {
+                    mesh: SceneController.getInstance().player.playerMesh,
+                    usePreciseIntersection: true
+                }
+            }, (evt: Babylon.ActionEvent) => {
+                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEnterDestinationPoint, {
+                    object: that,
+                    message: "Player Enters the destination point",
+                })
+            })
+        );
+        this._mesh.actionManager.registerAction(
+            new Babylon.ExecuteCodeAction({
+                trigger: Babylon.ActionManager.OnIntersectionExitTrigger,
+                parameter: {
+                    mesh: SceneController.getInstance().player.playerMesh,
+                    usePreciseIntersection: true
+                }
+            }, (evt: Babylon.ActionEvent) => {
+                EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerExitDestinationPoint, {
+                    object: that,
+                    message: "Player Exits the destination point",
+                })
+            })
+        );
     }
 }
