@@ -11,7 +11,6 @@ import { Buff } from "./buff";
 import { EventDispatcher } from "./event_dispatcher";
 import { Enemy } from "./enemy";
 import { Item } from "./item";
-import { InstancedLinesMesh, SceneOptimization } from "@babylonjs/core";
 
 export class MapBlock implements MyTypes.EventPublisher {
     /**
