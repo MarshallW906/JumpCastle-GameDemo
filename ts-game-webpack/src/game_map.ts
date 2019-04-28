@@ -114,6 +114,8 @@ export class MapBlock implements MyTypes.EventPublisher {
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 // console.log("MapBlock collide with Player, OnIntersectionEnterTrigger");
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEntersMapBlock, {
                     object: that,
@@ -131,6 +133,8 @@ export class MapBlock implements MyTypes.EventPublisher {
                         usePreciseIntersection: true
                     }
                 }, (evt: Babylon.ActionEvent) => {
+                    if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                     EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeavesMapBlock, {
                         object: that,
                         message: "Player Leaves a mapblock"
@@ -189,6 +193,10 @@ export class GameMap implements MyTypes.EventSubscriber {
 
         this._itemInfo = new Array<MyTypes.ItemInfo>();
         this._enemyInfoArray = new Array<MyTypes.EnemyInfo>();
+    }
+
+    reset(): void {
+        this._teleportPointsUnlocked = new Array<boolean>();
     }
 
     private initMapInfo(): void {
@@ -657,6 +665,8 @@ export class MapBlockEdgeFactory implements MyTypes.EventPublisher {
     initEventDetector(): void {
         let that = this;
         SceneController.getInstance().gameScene.registerBeforeRender(() => {
+            if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
             let enemies = SceneController.getInstance().enemyFactory.enemies;
             that._blockEdges.forEach((blockEdge: MapBlockEdge) => {
                 if (blockEdge == undefined) return;
@@ -714,6 +724,8 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEnterTeleportPoint, {
                     object: that,
                     message: "Player enters a teleport point"
@@ -729,6 +741,8 @@ export class TeleportPoint implements MyTypes.EventPublisher, MyTypes.EventSubsc
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerExitTeleportPoint, {
                     object: that,
                     message: "Player exits a teleport point"
@@ -799,6 +813,8 @@ export class DestinationPoint implements MyTypes.EventPublisher {
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerEnterDestinationPoint, {
                     object: that,
                     message: "Player Enters the destination point",
@@ -813,6 +829,8 @@ export class DestinationPoint implements MyTypes.EventPublisher {
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerExitDestinationPoint, {
                     object: that,
                     message: "Player Exits the destination point",

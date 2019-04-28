@@ -55,8 +55,8 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
-                console.log("item collide with Player, OnIntersectionEnterTrigger");
-                // console.log(evt);
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.ItemCollideWithPlayer, {
                     object: that,
                     message: "Item Collide With Player"
@@ -74,7 +74,8 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
                         usePreciseIntersection: true
                     }
                 }, (evt: Babylon.ActionEvent) => {
-                    console.log("player leaves an purchas-able item ");
+                    if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
                     EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.PlayerLeaveAnItem, {
                         object: that,
                         message: "Player leaves an purchas-able item"
@@ -137,6 +138,15 @@ export class ItemFactory implements MyTypes.EventSubscriber {
         this._items = new Array<Item>();
 
         this.registerEventHandler();
+    }
+
+    reset(): void {
+        this._items.forEach((item) => {
+            if (item !== undefined) {
+                item.destroyMesh();
+            }
+        })
+        this._items = new Array<Item>();
     }
 
     test(): void {

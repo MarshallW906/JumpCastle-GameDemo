@@ -6,7 +6,7 @@ import { EventDispatcher } from './event_dispatcher';
 import { GameMap, MapBlockEdgeFactory } from './game_map';
 import { ItemFactory } from './item';
 import { BulletFactory } from './bullet';
-import { EventType } from './types';
+import { EventType, GameStatus } from './types';
 import { EnemyFactory } from './enemy';
 
 export class SceneController {
@@ -33,9 +33,9 @@ export class SceneController {
     private _followCamera: Babylon.FollowCamera;
     get followCamera(): Babylon.FollowCamera { return this._followCamera; }
     private _freeCamera: Babylon.FreeCamera;
-    private _physicsPlugin: any;
 
     private _guiController: GUIController;
+    get guiController(): GUIController { return this._guiController; }
 
     private _player: Player;
     get player(): Player { return this._player; }
@@ -52,6 +52,8 @@ export class SceneController {
 
     private _eventDispatcher: EventDispatcher;
 
+    gameStatus: GameStatus;
+
     initAll(): void {
         // canvas, engine, scene
         this.initCanvasAndEngine();
@@ -59,21 +61,42 @@ export class SceneController {
 
         this.initEventDispatcher();
 
-        // game elements
         this.initGUI();
+
         this.initPlayer(); // also registered keyboard inputs
         this.initMap();
 
-        this.initItem();
+        this.initItemFactory();
         this.initEnemyFactory();
         this.initBulletFactory();
+    }
+
+    gameStart(): void {
+        this.resetGame();
+
+        this.initItems();
+        this.initEnemies();
 
         this._guiController.refreshAllGUI();
     }
 
-    restart(): void { this.initAll(); }
+    private resetGame(): void {
+        this._player.reset();
 
-    initCanvasAndEngine(): void {
+        this._gameMap.reset();
+        this._itemFactory.reset();
+        this._bulletFactory.reset();
+        this._enemyFactory.reset();
+    }
+
+    gameRestart(): void {
+        this.resetGame();
+
+        this.gameStart();
+        this._guiController.GameRuntime();
+    }
+
+    private initCanvasAndEngine(): void {
         this._gameCanvas = document.createElement('canvas');
         this._gameCanvas.id = 'babylonCanvas'
         this._gameCanvas.setAttribute('width', '800');
@@ -93,11 +116,11 @@ export class SceneController {
         });
     }
 
-    initSceneAndCamera(): void {
+    private initSceneAndCamera(): void {
         this._gameScene = new Babylon.Scene(this._gameEngine);
-        this._physicsPlugin = new Babylon.CannonJSPlugin();
+        let physicsPlugin = new Babylon.CannonJSPlugin();
         let gravityVector = new Babylon.Vector3(0, -9.81, 0);
-        this._gameScene.enablePhysics(gravityVector, this._physicsPlugin);
+        this._gameScene.enablePhysics(gravityVector, physicsPlugin);
 
         this._followCamera = new Babylon.FollowCamera('followCamera1', new Babylon.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
@@ -121,28 +144,41 @@ export class SceneController {
 
     switchActiveCamera(): void {
         if (this._gameScene.activeCamera.name == this._followCamera.name) {
-            this._gameScene.activeCamera = this._freeCamera;
+            this.switchToFreeCamera();
         } else {
+            this.switchToFollowCamera();
+        }
+    }
+
+    switchToFollowCamera(): void {
+        if (this._gameScene.activeCamera.name != this._followCamera.name) {
             this._gameScene.activeCamera = this._followCamera;
         }
     }
 
-    initGUI(): void {
+    switchToFreeCamera(): void {
+        if (this._gameScene.activeCamera.name != this._freeCamera.name) {
+            this._gameScene.activeCamera = this._freeCamera;
+        }
+    }
+
+    private initGUI(): void {
         this._guiController = GUIController.getInstance();
         this._guiController.init();
         this._guiController.HideAll();
-        this._guiController.GameRuntime();
+        this._guiController.Title();
+        // this._guiController.GameRuntime();
         // for test
         this._guiController.TestGUI();
     }
 
-    initPlayer(): void {
+    private initPlayer(): void {
         this._player = new Player();
         this._player.init();
         this._followCamera.lockedTarget = this.player.playerMesh;
     }
 
-    initMap(): void {
+    private initMap(): void {
         this._mapBlockEdgeFactory = new MapBlockEdgeFactory();
 
         this._gameMap = new GameMap();
@@ -150,28 +186,31 @@ export class SceneController {
         // this._gameMap.test();
     }
 
-    initEnemyFactory(): void {
+    private initEnemyFactory(): void {
         this._enemyFactory = new EnemyFactory();
         // this._enemyFactory.test();
+    }
+
+    private initEnemies(): void {
         this._enemyFactory.createEnemiesByEnemyInfo(this._gameMap.enemyInfoArray);
     }
 
-    initItem(): void {
+    private initItemFactory(): void {
         this._itemFactory = new ItemFactory();
-        // this._itemFactory.test();
+    }
+
+    private initItems(): void {
         this._itemFactory.createItemsByItemInfoCollection(this._gameMap.itemInfo);
     }
 
-    initBulletFactory(): void {
+    private initBulletFactory(): void {
         this._bulletFactory = new BulletFactory();
-        this._bulletFactory.test();
     }
 
-    initEventDispatcher(): void {
+    private initEventDispatcher(): void {
         this._eventDispatcher = EventDispatcher.getInstance();
         this._eventDispatcher.init();
 
-        // this._eventDispatcher.test();
         this._eventDispatcher.registerEventType(EventType.ItemCollideWithPlayer);
         this._eventDispatcher.registerEventType(EventType.PlayerLeaveAnItem);
         this._eventDispatcher.registerEventType(EventType.ItemBePurchased);
@@ -192,5 +231,8 @@ export class SceneController {
         this._eventDispatcher.registerEventType(EventType.GUIQuantityChange);
         this._eventDispatcher.registerEventType(EventType.EnemyReachesMapBlockEdge);
         this._eventDispatcher.registerEventType(EventType.EnemySeesPlayer);
+
+        this._eventDispatcher.registerEventType(EventType.GameWin);
+        this._eventDispatcher.registerEventType(EventType.GameOver);
     }
 }

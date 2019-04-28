@@ -33,7 +33,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
     subtractHP(quantity: number): void {
         this.HP -= quantity;
-        if (this.HP < 0) {
+        if (this.HP <= 0) {
             this.HP = 0;
             this.onDead();
         }
@@ -115,6 +115,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     initProperties(): void {
+        this._bornLocation = new Babylon.Vector3(3, 2, 0);
+
         this._maxHP = 100;
         this._maxSP = 100;
         this._invincible = false;
@@ -134,6 +136,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this._buffs = new Array<Buff>();
 
         this._curTeleportPointId = undefined;
+        this.currentPickedItem = undefined;
         this._canTeleport = false;
     }
 
@@ -142,6 +145,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     get playerMesh(): Babylon.Mesh { return this._playerMesh; }
     private _gameScene: Babylon.Scene = SceneController.getInstance().gameScene;
 
+    private _bornLocation: Babylon.Vector3;
+
     initMesh(): void {
         this._playerMesh = Babylon.Mesh.CreateBox("PlayerBox", 2, this._gameScene);
         let playerMaterial = new Material.GridMaterial("PlayerGridMaterial", this._gameScene);
@@ -149,7 +154,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         playerMaterial.lineColor = Babylon.Color3.Black();
         this._playerMesh.material = playerMaterial;
 
-        this._playerMesh.position = new Babylon.Vector3(3, 2, 0);
+        this._playerMesh.position = this._bornLocation;
         this._playerMesh.physicsImpostor = new Babylon.PhysicsImpostor(this._playerMesh, Babylon.PhysicsImpostor.BoxImpostor, { mass: 1, restitution: 0, friction: 0 }, this._gameScene);
 
         let that = this;
@@ -246,6 +251,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     registerBeforeRenderFuncs(): void {
         let that = this;
         this._gameScene.registerBeforeRender(() => {
+            if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
             if (that.keyMapStates.get('a') || that.keyMapStates.get('A')) {
                 // console.log("A. Move to Left");
                 that.move(MyTypes.MoveDirection.Left);
@@ -268,6 +275,11 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         this.registerKeyboardActions();
         this.registerBeforeRenderFuncs();
         this.registerEventHandler();
+    }
+
+    reset(): void {
+        this.initProperties();
+        this._playerMesh.position = this._bornLocation;
     }
 
     gold: number;
@@ -420,9 +432,11 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
         }
     }
     purchaseItem(): void {
+        if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
         if (this.currentPickedItem == undefined) return;
 
         if (this.currentPickedItem.price <= this.gold) {
+
             this.subtractGold(this.currentPickedItem.price);
             // console.log(this.gold);
 
@@ -443,11 +457,21 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     get buffs(): Array<Buff> { return this._buffs; }
 
     onDead(): void {
-        // now implemented
+        if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
+        EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.GameOver, {
+            object: {},
+            message: "Game Over..."
+        });
     }
 
     onGameWin(): void {
-        console.log("Game win........")
+        if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
+        EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.GameWin, {
+            object: {},
+            message: "You Win!"
+        });
     }
 
     popUpSoulNotEnoughReminder(): void {
@@ -455,6 +479,8 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
     }
 
     sendGUIQuantityChangeEvent(propertyToChange: string, newValue: any): void {
+        if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
         EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.GUIQuantityChange, {
             object: newValue,
             message: propertyToChange

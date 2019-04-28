@@ -107,6 +107,8 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
      * sends an event.
      */
     onDead(): void {
+        if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
         EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.EnemyDead, {
             object: this,
             message: "An enemy is dead"
@@ -151,7 +153,9 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
                     usePreciseIntersection: true
                 }
             }, (evt: Babylon.ActionEvent) => {
-                // console.log("enemy collide with player");
+                if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
+                // console.log("enemy collide with player"); 
                 EventDispatcher.getInstance().receiveEvent(MyTypes.EventType.EnemyCollideWithPlayer, {
                     object: that,
                     message: "Enemy collide with Player"
@@ -209,6 +213,16 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
         SceneController.getInstance().gameScene.registerBeforeRender(EnemyFactory.getFnAnimateAllEnemies(this));
     }
 
+    reset(): void {
+        // clear all enemies
+        this._enemies.forEach((enemy) => {
+            if (enemy != undefined) {
+                enemy.destroyMesh();
+            }
+        })
+        this._enemies = new Array<Enemy>();
+    }
+
     test(): void {
         this.createNewEnemy({
             type: MyTypes.EnemyType.NormalSolider,
@@ -242,6 +256,8 @@ export class EnemyFactory implements MyTypes.EventSubscriber {
 
     static getFnAnimateAllEnemies(enemyFactory: EnemyFactory): () => void {
         return () => {
+            if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
             if (enemyFactory == undefined) return;
 
             enemyFactory.enemies.forEach((enemy) => {

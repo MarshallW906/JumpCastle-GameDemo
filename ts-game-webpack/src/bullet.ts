@@ -87,6 +87,10 @@ export class BulletFactory implements MyTypes.EventPublisher, MyTypes.EventSubsc
         SceneController.getInstance().gameScene.registerBeforeRender(BulletFactory.getFnAnimateAllBullets(this));
     }
 
+    reset(): void {
+        this._bullets = new Array<Bullet>();
+    }
+
     test() {
         let player = SceneController.getInstance().player;
         this.createNewBullet(player.attackDamage, player.playerMesh.position.add(Babylon.Vector3.Left()), MyTypes.MoveDirection.Left);
@@ -126,6 +130,8 @@ export class BulletFactory implements MyTypes.EventPublisher, MyTypes.EventSubsc
     initEventDetector(): void {
         let that = this;
         SceneController.getInstance().gameScene.registerBeforeRender(() => {
+            if (SceneController.getInstance().gameStatus != MyTypes.GameStatus.GameRuntime) return;
+
             let enemies = SceneController.getInstance().enemyFactory.enemies;
             that._bullets.forEach((bullet: Bullet) => {
                 if (bullet == undefined) return;

@@ -2,6 +2,15 @@ import { Vector3, Size } from "@babylonjs/core";
 
 import { Buff } from "./buff";
 
+// game status
+export enum GameStatus {
+    Loading,
+    Title,
+    GameRuntime,
+    GameOver,
+    Win,
+}
+
 // Types: Enum
 export enum BuffType { Permanent, Time, DependOnMap }
 

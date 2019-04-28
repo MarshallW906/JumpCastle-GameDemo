@@ -76,7 +76,6 @@ export class GUIController implements MyTypes.EventSubscriber {
 
     }
 
-
     Loading(): void {
         this.hideCurrentGUI();
         this.currentGUIMode = MyTypes.GUIMode.Loading;
@@ -84,6 +83,9 @@ export class GUIController implements MyTypes.EventSubscriber {
         // display loading GUI
         // this.advancedTexture.addControl(this.progressBarLoading);
         this.advancedTexture.addControl(this.logoGameTitle)
+
+        SceneController.getInstance().switchToFreeCamera();
+        SceneController.getInstance().gameStatus = MyTypes.GameStatus.Loading;
     }
     Title(): void {
         this.hideCurrentGUI();
@@ -92,6 +94,9 @@ export class GUIController implements MyTypes.EventSubscriber {
         // display Title GUI
         this.advancedTexture.addControl(this.logoGameTitle);
         this.advancedTexture.addControl(this.buttonStart);
+
+        SceneController.getInstance().switchToFreeCamera();
+        SceneController.getInstance().gameStatus = MyTypes.GameStatus.Title;
     }
     GameRuntime(): void {
         this.hideCurrentGUI();
@@ -103,6 +108,8 @@ export class GUIController implements MyTypes.EventSubscriber {
                 this.advancedTexture.addControl(guiElement);
             }
         })
+        SceneController.getInstance().switchToFollowCamera();
+        SceneController.getInstance().gameStatus = MyTypes.GameStatus.GameRuntime;
     }
     GameOver(): void {
         // no need to hideGUI()
@@ -113,6 +120,9 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.advancedTexture.addControl(this.textblockGameOver);
         this.advancedTexture.addControl(this.buttonReturnToTitle);
         this.advancedTexture.addControl(this.buttonRestart);
+
+        SceneController.getInstance().switchToFreeCamera();
+        SceneController.getInstance().gameStatus = MyTypes.GameStatus.GameOver;
     }
     Win(): void {
         // no need to hideGUI()
@@ -123,6 +133,9 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.advancedTexture.addControl(this.textblockWin);
         this.advancedTexture.addControl(this.buttonReturnToTitle);
         this.advancedTexture.addControl(this.buttonRestart);
+
+        SceneController.getInstance().switchToFreeCamera();
+        SceneController.getInstance().gameStatus = MyTypes.GameStatus.Win;
     }
 
     HideAll(): void {
@@ -178,6 +191,9 @@ export class GUIController implements MyTypes.EventSubscriber {
             SceneController.getInstance().switchActiveCamera();
             console.log("Active camera switched to", SceneController.getInstance().gameScene.activeCamera.name);
         });
+        createTestButton("SwitchActiveCamera", "D", '200px', '-40px', () => {
+            SceneController.getInstance().player.getDamage(40);
+        });
 
         createTestButton("ShowGameWinPanel", "T", '240px', '-40px', () => {
             that.Title();
@@ -228,7 +244,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonStart.color = 'black';
         this.buttonStart.cornerRadius = 0;
         this.buttonStart.background = 'yellow';
-        this.buttonStart.onPointerUpObservable.add(this.onClickedButtonStart)
+        this.buttonStart.onPointerUpObservable.add(GUIController.getFnOnClickedButtonStart());
         // this.buttonStart.left = '0';
         this.buttonStart.top = '100';
         // this.buttonStart.isVisible = true;
@@ -240,7 +256,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonRestart.color = 'black';
         this.buttonRestart.cornerRadius = 0;
         this.buttonRestart.background = 'yellow';
-        this.buttonRestart.onPointerUpObservable.add(this.onClickedButtonRestart);
+        this.buttonRestart.onPointerUpObservable.add(GUIController.getFnOnClickedButtonRestart());
         // this.buttonRetart.left = '0';
         this.buttonRestart.top = '150px';
         // this.buttonRestart.isVisible = true;
@@ -252,7 +268,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonMute.height = '20px';
         this.buttonMute.color = 'black';
         this.buttonMute.background = 'yellow';
-        this.buttonMute.onPointerUpObservable.add(this.onClickedButtonMute);
+        this.buttonMute.onPointerUpObservable.add(GUIController.getFnOnClickedButtonMute());
         this.buttonMute.left = '350px';
         this.buttonMute.top = '-260px';
         this.buttonMute.zIndex = -1;
@@ -265,7 +281,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.buttonReturnToTitle.height = '40px';
         this.buttonReturnToTitle.color = 'black';
         this.buttonReturnToTitle.background = 'yellow';
-        this.buttonReturnToTitle.onPointerUpObservable.add(this.onClickedButtonReturnToTitle);
+        this.buttonReturnToTitle.onPointerUpObservable.add(GUIController.getFnOnClickedButtonReturnToTitle());
         // this.buttonReturnToTitle.left = '0';
         this.buttonReturnToTitle.top = '200px';
         // this.buttonReturnToTitle.isVisible = true;
@@ -380,29 +396,48 @@ export class GUIController implements MyTypes.EventSubscriber {
         );
     }
 
-    private onClickedButtonStart(): void {
-        console.log('buttonStart clicked');
-        // start game
+    private static getFnOnClickedButtonStart(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            console.log('buttonStart clicked');
+            // start game
+            SceneController.getInstance().gameStart();
+            guiController.GameRuntime();
+        }
     }
-    private onClickedButtonRestart(): void {
-        console.log('buttonRestart clicked');
-        // restart
+    private static getFnOnClickedButtonRestart(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            console.log('buttonRestart clicked');
+            // restart
+            SceneController.getInstance().gameRestart();
+            guiController.GameRuntime();
+        }
     }
 
-    private onClickedButtonMute(): void {
-        console.log('buttonMute clicked');
-        // mute/unmute
+    private static getFnOnClickedButtonMute(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            console.log('buttonMute clicked');
+            // mute/unmute
+        }
     }
-    private onClickedButtonReturnToTitle(): void {
-        console.log('buttonReturnToTitle clicked');
-        // return to title
+    private static getFnOnClickedButtonReturnToTitle(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            console.log('buttonReturnToTitle clicked');
+            // return to title
+            guiController.Title();
+        }
     }
 
     registerEventHandler(): void {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GUIQuantityChange, GUIController.getFnOnGUIQuantityChange())
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GameWin, GUIController.getFnOnGameWin())
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GameOver, GUIController.getFnOnGameOver())
     }
 
-    static getFnOnGUIQuantityChange(): MyTypes.EventHandler {
+    private static getFnOnGUIQuantityChange(): MyTypes.EventHandler {
         let guiController = GUIController.getInstance();
         return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
             let HUDtoChange: string = eventMessage.message;
@@ -429,6 +464,19 @@ export class GUIController implements MyTypes.EventSubscriber {
         })
     }
 
+    private static getFnOnGameWin(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            guiController.Win();
+        }
+    }
+
+    private static getFnOnGameOver(): () => void {
+        let guiController = GUIController.getInstance();
+        return () => {
+            guiController.GameOver();
+        }
+    }
 }
 
 
