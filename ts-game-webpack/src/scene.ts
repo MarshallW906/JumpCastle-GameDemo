@@ -32,6 +32,7 @@ export class SceneController {
 
     private _followCamera: Babylon.FollowCamera;
     get followCamera(): Babylon.FollowCamera { return this._followCamera; }
+    private _freeCamera: Babylon.FreeCamera;
     private _physicsPlugin: any;
 
     private _guiController: GUIController;
@@ -106,11 +107,24 @@ export class SceneController {
 
         // this._followCamera.mode = Babylon.Camera.ORTHOGRAPHIC_CAMERA; // try ortho?
 
-        console.log(this._followCamera.globalPosition)
+        console.log(this._followCamera.globalPosition);
         console.log(this._followCamera.rotation);
 
         let light = new Babylon.HemisphericLight('hemisphericLight1', new Babylon.Vector3(0, 1, 0), this._gameScene);
         light.intensity = 0.7;
+
+        this._freeCamera = new Babylon.FreeCamera("FreeCamera1", new Babylon.Vector3(100, 5, 0), this._gameScene);
+        this._freeCamera.attachControl(this._gameCanvas, true);
+
+        this._gameScene.activeCamera = this._freeCamera;
+    }
+
+    switchActiveCamera(): void {
+        if (this._gameScene.activeCamera.name == this._followCamera.name) {
+            this._gameScene.activeCamera = this._freeCamera;
+        } else {
+            this._gameScene.activeCamera = this._followCamera;
+        }
     }
 
     initGUI(): void {
@@ -178,6 +192,5 @@ export class SceneController {
         this._eventDispatcher.registerEventType(EventType.GUIQuantityChange);
         this._eventDispatcher.registerEventType(EventType.EnemyReachesMapBlockEdge);
         this._eventDispatcher.registerEventType(EventType.EnemySeesPlayer);
-
     }
 }

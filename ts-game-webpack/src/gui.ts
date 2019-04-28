@@ -174,6 +174,10 @@ export class GUIController implements MyTypes.EventSubscriber {
         createTestButton("ShowCameraPosition", "C", '200px', '20px', () => {
             console.log("camera global position", SceneController.getInstance().followCamera.globalPosition);
         });
+        createTestButton("SwitchActiveCamera", "S", '200px', '-20px', () => {
+            SceneController.getInstance().switchActiveCamera();
+            console.log("Active camera switched to", SceneController.getInstance().gameScene.activeCamera.name);
+        });
 
         createTestButton("ShowGameWinPanel", "T", '240px', '-40px', () => {
             that.Title();
