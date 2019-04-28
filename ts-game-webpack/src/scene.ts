@@ -169,7 +169,7 @@ export class SceneController {
         this._guiController.Title();
         // this._guiController.GameRuntime();
         // for test
-        this._guiController.TestGUI();
+        // this._guiController.TestGUI();
     }
 
     private initPlayer(): void {
