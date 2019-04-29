@@ -10,6 +10,7 @@ import { Enemy } from "./enemy";
 import { Item } from "./item";
 import { TeleportPoint, MapBlock } from "./game_map";
 import { Buff } from "./buff";
+import { GUIController } from "./gui";
 
 export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, MyTypes.Ticker, MyTypes.EventSubscriber {
     // interface Ticker
@@ -643,6 +644,7 @@ export class Player implements MyTypes.ObjectWithMeshEntity, MyTypes.Creature, M
                 player.onGameWin();
             } else {
                 player.popUpSoulNotEnoughReminder();
+                GUIController.getInstance().setShowTextblockSoulNotEngouth(true);
             }
         });
     }

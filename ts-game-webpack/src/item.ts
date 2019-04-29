@@ -35,9 +35,34 @@ export class Item implements MyTypes.EventPublisher, MyTypes.EventSubscriber {
         if (location.z != 0) {
             throw Error("Item location.z is not 0 !");
         }
-        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 1, SceneController.getInstance().gameScene);
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 1, gameScene);
         this._mesh.position = location;
-        // set color ...
+
+        let material = new BABYLON.StandardMaterial(_.join(["Item", "Material", this._id.toString()], '-'), gameScene);
+
+        switch (this._type) {
+            case MyTypes.ItemType.SoulBall:
+                material.diffuseColor = new BABYLON.Color3(0, 238, 238);
+                break;
+            case MyTypes.ItemType.HPRecovery:
+                material.diffuseColor = BABYLON.Color3.Red();
+                break;
+            case MyTypes.ItemType.SPRecovery:
+                material.diffuseColor = new BABYLON.Color3(106, 90, 205);
+                break;
+            case MyTypes.ItemType.AddAttackDamage:
+                material.diffuseColor = new BABYLON.Color3(192, 192, 192);
+                break;
+            case MyTypes.ItemType.AddMoveSpeed:
+                material.diffuseColor = new BABYLON.Color3(238, 130, 238);
+                break;
+            case MyTypes.ItemType.AddSpRecoverSpeed:
+                material.diffuseColor = BABYLON.Color3.Green();
+                break;
+        }
+
+        this._mesh.material = material;
     }
 
     destroyMesh(): void {

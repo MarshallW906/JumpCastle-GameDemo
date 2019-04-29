@@ -32,10 +32,13 @@ export class Bullet implements MyTypes.EventSubscriber {
     }
 
     private initMesh(location: BABYLON.Vector3) {
-        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 0.3, SceneController.getInstance().gameScene);
-        // set collider
-        // set color
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = BABYLON.Mesh.CreateSphere(this._name, 16, 0.5, gameScene);
         this._mesh.position = location;
+
+        let material = new BABYLON.StandardMaterial(_.join(['bullet', 'material', this._id.toString()], '-'), gameScene);
+        material.diffuseColor = BABYLON.Color3.Magenta();
+        this._mesh.material = material;
     }
 
     animate(): void {
@@ -65,7 +68,7 @@ export class Bullet implements MyTypes.EventSubscriber {
                 // object.mesh.dispose();
                 setTimeout(() => {
                     (<Bullet>object).mesh.dispose(); // might have some post-error
-                }, 100);
+                }, 10);
             }
         }
     }
@@ -103,8 +106,11 @@ export class BulletFactory implements MyTypes.EventPublisher, MyTypes.EventSubsc
 
         let that = this;
         setTimeout(() => {
-            if (that.bullets[newBulletId] != undefined) {
+            if (that._bullets[newBulletId] != undefined) {
                 that.destroyBulletById(newBulletId);
+                if (!that._bullets[newBulletId].mesh.isDisposed) {
+                    that._bullets[newBulletId].mesh.dispose();
+                }
             }
         }, 5050);
     }

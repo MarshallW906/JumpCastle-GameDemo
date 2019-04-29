@@ -49,6 +49,8 @@ export class GUIController implements MyTypes.EventSubscriber {
 
         this.initGUIElementsGameRuntime();
 
+        this.initTextBlockSoulNotEnough();
+
         this.composeGUItest();
 
         this.registerEventHandler();
@@ -321,6 +323,7 @@ export class GUIController implements MyTypes.EventSubscriber {
         this.logoGameTitle = new BabylonGUI.TextBlock();
         this.logoGameTitle.text = "JumpCastle";
         this.logoGameTitle.fontSize = '48';
+        this.logoGameTitle.color = 'white';
         this.logoGameTitle.top = '-200px';
     }
 
@@ -396,6 +399,23 @@ export class GUIController implements MyTypes.EventSubscriber {
         );
     }
 
+    private textblockSoulNotEngouth: BabylonGUI.TextBlock;
+    private initTextBlockSoulNotEnough(): void {
+        this.textblockSoulNotEngouth = new BabylonGUI.TextBlock();
+        this.textblockSoulNotEngouth.text = "You have not collected enough souls!"
+        this.textblockSoulNotEngouth.color = 'white';
+        this.textblockSoulNotEngouth.fontSize = 30;
+        this.textblockSoulNotEngouth.top = '-150px';
+    }
+
+    setShowTextblockSoulNotEngouth(display: boolean): void {
+        if (display) {
+            this.advancedTexture.addControl(this.textblockSoulNotEngouth);
+        } else {
+            this.advancedTexture.removeControl(this.textblockSoulNotEngouth);
+        }
+    }
+
     private static getFnOnClickedButtonStart(): () => void {
         let guiController = GUIController.getInstance();
         return () => {
@@ -435,6 +455,8 @@ export class GUIController implements MyTypes.EventSubscriber {
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GUIQuantityChange, GUIController.getFnOnGUIQuantityChange())
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GameWin, GUIController.getFnOnGameWin())
         EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.GameOver, GUIController.getFnOnGameOver())
+
+        EventDispatcher.getInstance().addEventHandler(MyTypes.EventType.PlayerExitDestinationPoint, GUIController.getFnOnPlayerExitDestinationPoint());
     }
 
     private static getFnOnGUIQuantityChange(): MyTypes.EventHandler {
@@ -462,6 +484,16 @@ export class GUIController implements MyTypes.EventSubscriber {
                     break;
             }
         })
+    }
+
+    static getFnOnPlayerExitDestinationPoint(): MyTypes.EventHandler {
+        let guiController = GUIController.getInstance();
+
+        return <MyTypes.EventHandler>((eventType: MyTypes.EventType, eventMessage: MyTypes.EventMessage) => {
+            setTimeout(() => {
+                guiController.setShowTextblockSoulNotEngouth(false);
+            }, 2000);
+        });
     }
 
     private static getFnOnGameWin(): () => void {

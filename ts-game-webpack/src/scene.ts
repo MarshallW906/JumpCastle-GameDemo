@@ -124,7 +124,7 @@ export class SceneController {
 
         this._followCamera = new BABYLON.FollowCamera('followCamera1', new BABYLON.Vector3(0, 5, -10), this._gameScene);
         this._followCamera.attachControl(this._gameCanvas, true);
-        this._followCamera.radius = 80;
+        this._followCamera.radius = 40;
         this._followCamera.noRotationConstraint = true;
         this._followCamera.heightOffset = 0;
 

@@ -1,10 +1,10 @@
 import * as BABYLON from "@babylonjs/core";
+import * as Material from '@babylonjs/materials';
 import * as _ from "lodash"
 
 import * as MyTypes from "./types";
 import { SceneController } from "./scene";
 import { EventDispatcher } from "./event_dispatcher";
-import { AutoRotationBehavior } from "@babylonjs/core";
 
 export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPublisher, MyTypes.EventSubscriber {
     // interface Ticker
@@ -68,8 +68,13 @@ export class Enemy implements MyTypes.Creature, MyTypes.Ticker, MyTypes.EventPub
     private _size: MyTypes.EnemySize;
 
     initMesh(location: BABYLON.Vector3): void {
-        this._mesh = BABYLON.MeshBuilder.CreateBox(this._name, this._size, SceneController.getInstance().gameScene);
+        let gameScene = SceneController.getInstance().gameScene;
+        this._mesh = BABYLON.MeshBuilder.CreateBox(this._name, this._size, gameScene);
         this._mesh.position = location;
+
+        let material = new Material.CellMaterial(_.join(["enemy", "material", this._id.toString()], '-'), gameScene);
+        material.diffuseColor = BABYLON.Color3.Green();
+        this._mesh.material = material;
     }
 
     destroyMesh(): void {

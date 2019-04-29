@@ -410,9 +410,9 @@ export class GameMap implements MyTypes.EventSubscriber {
 
         // map: teleport points, 3 in total
         this._teleportPointInfo.push(
-            new BABYLON.Vector3(12.5, 0.5, 0), // start point
-            new BABYLON.Vector3(5, 24.5, 0), // floor 3 at the shop
-            new BABYLON.Vector3(80, 48.5, 0), // near the destination point
+            new BABYLON.Vector3(12.5, 2, 0), // start point
+            new BABYLON.Vector3(5, 26, 0), // floor 3 at the shop
+            new BABYLON.Vector3(80, 50, 0), // near the destination point
         );
 
         this._destinationPointLocation = new BABYLON.Vector3(95, 55, 0);
